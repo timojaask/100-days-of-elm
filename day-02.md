@@ -77,7 +77,7 @@ view model =
   ...
 ```
 
-One way to begin writing an Elm app is to try to make a model. First example of this is in `./user-input/buttons.elm`. Since it's a increment/decrement counter, the model is most likely going to need an integer. In this case, it's the simplest kind of model:
+One way to begin writing an Elm app is to try to make a model. First example of this is in [buttons.elm](./user-input/buttons.elm). Since it's a increment/decrement counter, the model is most likely going to need an integer. In this case, it's the simplest kind of model:
 
 ```
 type alias Model = Int
