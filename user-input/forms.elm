@@ -56,8 +56,8 @@ view model =
     , input [ type_ "password", placeholder "Re-enter password", onInput PasswordAgain ] []
     , input [ type_ "text", placeholder "Age", onInput Age ] []
     , button [ onClick Submit ] [ text "Submit" ]
-   , checkbox ToggleSubscribe "Subscribe to newsletter"
-   , checkbox ToggleSurprise "Want a surprise?"
+    , checkbox ToggleSubscribe "Subscribe to newsletter"
+    , checkbox ToggleSurprise "Want a surprise?"
     , viewValidation model
     ]
 
