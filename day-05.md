@@ -120,6 +120,8 @@ By default, the first option is selected, which in this case is "cats". We need 
 
 Moving on to subscriptions (the "Time" chapter in The Elm Architecture guide).
 
+See the code at: [time.elm](./effects/time.elm).
+
 Here we learn how to subscribe to time ticks. Very straight forward:
 ```
 type Msg = Tick Time

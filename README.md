@@ -6,3 +6,4 @@ Progress and learning notes for each day:
 * [Day 3: Buttons, inputs, forms](./day-03.md)
 * [Day 4: Effects, Random, Img, Svg](./day-04.md)
 * [Day 5: Effects, Random, Http, Subscriptions, Time](./day-05.md)
+* [Day 6: Effects, Time](./day-06.md)

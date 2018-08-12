@@ -39,40 +39,186 @@ subscriptions model =
 -- VIEW
 view : Model -> Html Msg
 view model =
-  let
-    coords = secondsHandEndCoords 50 50 40 model.time
-    handX = toString (Tuple.first coords)
-    handY = toString (Tuple.second coords)
-  in
     Html.div []
-    [ svg [ viewBox "0 0 100 100", width "300px" ]
-      [ circle [ cx "50", cy "50", r "45", fill "#0B79CE" ] []
-      , line [ x1 "50", y1 "50", x2 handX, y2 handY, stroke "#023963" ] []
-      ]
-    , text ("offset = " ++ (toString (secondsHandEndCoords 50 50 40 model.time)))
-    , text ("second = " ++ (toString (second model.time)))
+    [ drawClock model.time
+    , text (debugTimeString model.time)
     , Html.button [ onClick ToggleIsRunning ] [ text "Start/Stop" ]
     ]
 
-second : Time -> Int
-second time =
-  Date.second (Date.fromTime time)
-
-secondsHandEndCoords : Int -> Int -> Int -> Time -> (Float, Float)
-secondsHandEndCoords cx cy r time =
-  let
-    offset = secondsHandOffset time
-  in
-    ( toFloat cx + Tuple.first offset * toFloat r
-    , toFloat cy + Tuple.second offset * toFloat r
+drawClock : Time -> Html Msg
+drawClock time =
+  svg [ viewBox "0 0 100 100", width "300px" ]
+    ( (drawClockBackground 50 50 45)
+    ++ (drawHourHand 50 50 time)
+    ++ (drawMinuteHand 50 50 time)
+    ++ (drawSecondHand 50 50 time)
     )
 
-secondsHandOffset : Time -> (Float, Float)
-secondsHandOffset time =
+drawClockBackground : Float -> Float -> Float -> List (Html Msg)
+drawClockBackground bgCX bgCY bgR =
+  (List.map (drawMinuteTick 50 50) (List.range 0 59)) ++
+  [ circle -- White filled circle covering the minute ticks
+    [ cx (toString bgCX)
+    , cy (toString bgCY)
+    , r (toString (bgR - 6))
+    , fill "white"
+    ] []
+  ] ++
+  (List.map (drawHourTick 50 50) (List.range 0 11)) ++
+  [ circle -- White filled circle covering the hour ticks
+    [ cx (toString bgCX)
+    , cy (toString bgCY)
+    , r (toString (bgR - 10))
+    , fill "white"
+    ] []
+  ] ++
+  [ circle -- Gray overall border
+    [ cx (toString bgCX)
+    , cy (toString bgCY)
+    , r (toString bgR)
+    , fillOpacity "0"
+    , strokeWidth "2px"
+    , stroke "gray"
+    ] []
+  , circle -- white line covering outer ends of hour and minute ticks
+    [ cx (toString bgCX)
+    , cy (toString bgCY)
+    , r (toString (bgR - 2))
+    , fillOpacity "0"
+    , strokeWidth "2px"
+    , stroke "white"
+    ] []
+  ]
+
+drawHourTick : Float -> Float -> Int -> Html Msg
+drawHourTick centerX centerY hour =
+  drawTick centerX centerY 2.5 12 hour
+
+drawMinuteTick : Float -> Float -> Int -> Html Msg
+drawMinuteTick centerX centerY minute =
+  drawTick centerX centerY 1.0 60 minute
+
+drawTick : Float -> Float -> Float -> Float -> Int -> Html Msg
+drawTick centerX centerY width maxValue value =
   let
-    secondsDegrees = 360 / 60 * (toFloat (second time))
-    secondsRadians = secondsDegrees * 3.14159265359 / 180
-    secondsXOffset = sin(secondsRadians)
-    secondsYOffset = cos(secondsRadians) * -1
+    handLength = 45
+    coords =  handCoord centerX centerY handLength maxValue (toFloat value)
+    handX = Tuple.first coords
+    handY = Tuple.second coords
   in
-    (secondsXOffset, secondsYOffset)
+    line
+      [ x1 (toString centerX)
+      , y1 (toString centerY)
+      , x2 (toString handX)
+      , y2 (toString handY)
+      , stroke "#000000"
+      , strokeWidth (toString width)
+      ] []
+  
+
+
+drawSecondHand : Float -> Float -> Time -> List (Html Msg)
+drawSecondHand centerX centerY time =
+  let
+    handLength = 30
+    coords = secondHandCoord centerX centerY handLength time
+    handX = Tuple.first coords
+    handY = Tuple.second coords
+  in
+  [ line
+    [ x1 (toString centerX)
+    , y1 (toString centerY)
+    , x2 (toString handX)
+    , y2 (toString handY)
+    , stroke "#FF0000"
+    ] []
+  , circle
+    [ cx (toString handX)
+    , cy (toString handY)
+    , r "3.7px"
+    , fill "#FF0000"
+    ] []
+  ]
+
+drawMinuteHand : Float -> Float -> Time -> List (Html Msg)
+drawMinuteHand centerX centerY time =
+  let
+    handLength = 40
+    coords = minuteHandCoord centerX centerY handLength time
+    handX = Tuple.first coords
+    handY = Tuple.second coords
+  in
+    [ line
+      [ x1 (toString centerX)
+      , y1 (toString centerY)
+      , x2 (toString handX)
+      , y2 (toString handY)
+      , stroke "#000000"
+      , strokeWidth "2px"
+      ] []
+    ]
+
+drawHourHand : Float -> Float -> Time -> List (Html Msg)
+drawHourHand centerX centerY time =
+  let
+    handLength = 30
+    coords = hourHandCoord centerX centerY handLength time
+    handX = Tuple.first coords
+    handY = Tuple.second coords
+  in
+    [ line
+      [ x1 (toString centerX)
+      , y1 (toString centerY)
+      , x2 (toString handX)
+      , y2 (toString handY)
+      , stroke "#000000"
+      , strokeWidth "4px"
+      ] []
+    ]
+
+debugTimeString : Time -> String
+debugTimeString time =
+  (toString (hour time)) ++ ":" ++ (toString (minute time)) ++ ":" ++ (toString (second time))
+
+second : Time -> Float
+second time =
+  toFloat (Date.second (Date.fromTime time))
+
+minute: Time -> Float
+minute time =
+  toFloat (Date.minute (Date.fromTime time))
+
+hour: Time -> Float
+hour time =
+  toFloat (Date.hour (Date.fromTime time))
+
+secondHandCoord : Float -> Float -> Float -> Time -> (Float, Float)
+secondHandCoord cx cy r time =
+  handCoord cx cy r 60 (second time)
+
+minuteHandCoord : Float -> Float -> Float -> Time -> (Float, Float)
+minuteHandCoord cx cy r time =
+  handCoord cx cy r 60 (minute time)
+
+hourHandCoord : Float -> Float -> Float -> Time -> (Float, Float)
+hourHandCoord cx cy r time =
+  handCoord cx cy r 12 (hour time)
+
+handCoord : Float -> Float -> Float -> Float -> Float -> (Float, Float)
+handCoord cx cy r maxValue curValue =
+  let
+    directionPoint = handDirectionPoint maxValue curValue
+  in
+    ( cx + Tuple.first directionPoint * r
+    , cy + Tuple.second directionPoint * r
+    )
+
+handDirectionPoint : Float -> Float -> (Float, Float)
+handDirectionPoint maxValue curValue =
+  let
+    handDegrees = 360 / maxValue * curValue
+    handRadians = handDegrees * pi / 180
+    pointX = sin(handRadians)
+    pointY = cos(handRadians) *  -1
+  in
+    (pointX, pointY)
