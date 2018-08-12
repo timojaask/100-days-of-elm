@@ -1,6 +1,6 @@
 ## Day 2
 
-Quick review of Day 1:
+Quick review of day 1:
 Functions:
 
 ```

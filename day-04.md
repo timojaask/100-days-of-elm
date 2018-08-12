@@ -1,6 +1,6 @@
 ## Day 4
 
-Quick review of Day 3:
+Quick review of day 3:
 
 There wasn't much new in day 3 in terms of language, but a few things wouldn't hurt to revise.
 

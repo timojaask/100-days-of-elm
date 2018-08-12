@@ -1,6 +1,6 @@
 ## Day 3
 
-Quick review of Day 2:
+Quick review of day 2:
 
 Three main parts of a typical Elm program:
 

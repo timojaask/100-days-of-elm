@@ -1,6 +1,6 @@
 ## Day 5
 
-Quick review of Day 4:
+Quick review of day 4:
 
 It was exciting! Yesterday we started looking at how effects are handled by Elm runtime (to be continued today). Let's go through new things one at a time:
 
