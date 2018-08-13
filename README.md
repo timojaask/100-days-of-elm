@@ -7,3 +7,4 @@ Progress and learning notes for each day:
 * [Day 4: Effects, Random, Img, Svg](./day-04.md)
 * [Day 5: Effects, Random, Http, Subscriptions, Time](./day-05.md)
 * [Day 6: Effects, Time](./day-06.md)
+* [Day 7: Anonymous functions, type aliases, union types](./day-07.md)
