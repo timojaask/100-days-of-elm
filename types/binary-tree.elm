@@ -70,6 +70,27 @@ flatten tree =
     Node v left right ->
       [v] ++ (flatten left) ++ (flatten right)
 
+flattenNLR : Tree a -> List a
+flattenNLR tree =
+  case tree of
+    Empty -> []
+    Node v left right ->
+      [v] ++ (flatten left) ++ (flatten right)
+
+flattenLNR : Tree a -> List a
+flattenLNR tree =
+  case tree of
+    Empty -> []
+    Node v left right ->
+      (flattenLNR left) ++ [v] ++ (flattenLNR right)
+
+flattenLRN : Tree a -> List a
+flattenLRN tree =
+  case tree of
+    Empty -> []
+    Node v left right ->
+      (flattenLRN left) ++ (flattenLRN right) ++ [v]
+
 isElement : a -> Tree a -> Bool
 isElement x tree =
   case tree of
@@ -94,6 +115,23 @@ flattened = flatten someTree
 flattened2 = flatten2 someTree
 foldFunc = \a -> (\b -> a + b)
 
+traverseTestTree = 
+  Node "F"
+    (Node "B"
+      (Node "A" Empty Empty)
+      (Node "D"
+        (Node "C" Empty Empty)
+        (Node "E" Empty Empty)
+      )
+    )
+    (Node "G"
+      Empty
+      (Node "I"
+        (Node "H" Empty Empty)
+        Empty
+      )
+    )
+
 main =
   div [ style [ ("font-family", "monospace") ] ]
     [ display "depth someTree" (depth someTree)
@@ -109,6 +147,9 @@ main =
     , display "contains2 6" (isElement2 6 someTree)
     , display "fold" (fold foldFunc 0 someTree)
     , display "fold2" (fold2 foldFunc 0 someTree)
+    , display "Pre-order (NLR)" (flattenNLR traverseTestTree)
+    , display "In-order (LNR)" (flattenLNR traverseTestTree)
+    , display "Post-order (LRN)" (flattenLRN traverseTestTree)
     ]
 
 

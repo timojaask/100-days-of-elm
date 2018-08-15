@@ -9,3 +9,4 @@ Progress and learning notes for each day:
 * [Day 6: Effects, Time](./day-06.md)
 * [Day 7: Anonymous functions, type aliases, union types](./day-07.md)
 * [Day 8: Using union types in a binary tree implementation](./day-08.md)
+* [Day 9: Maybe, Result, Task](./day-09.md)
