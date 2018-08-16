@@ -102,8 +102,6 @@ view userInputAge =
 
 > These docs are getting updated for 0.18. They will be back soon! Until then, the docs will give a partial overview.
 
-EDIT: I came here from the future to tell the reader that the official Elm docs on `Task` are indeed outdated. Read on.
-
 I turned to google and decided to read the first thing I find. Found Ossi Hanhinen's nice article named [Tasks in Modern Elm](http://ohanhi.com/tasks-in-modern-elm.html). Below are some takaways.
 
 We've already used HTTP library with Elm, where you created a send command and gave it to Elm runtime to process. The HTTP library also allows you to convert the send command into a task. Why would you wanna do that? On its own it's not very useful, as you can convert a task back into a command and sent to Elm, but the cool thing with tasks is that you can **chain** them.
@@ -114,7 +112,7 @@ For example, if you need to include a current time stamp inside a get request, h
 
 ---
 
-Next up Google offered me to read Bill Peregoy's article named [Tasks in Elm 0.18](https://becoming-functional.com/tasks-in-elm-0-18-2b64a35fd82e). Turns out the official Elm docs are describing the old version 0.17.
+Next up Google offered me to read Bill Peregoy's article named [Tasks in Elm 0.18](https://becoming-functional.com/tasks-in-elm-0-18-2b64a35fd82e).
 
 In the new version, the tasks are converted into commands by using either `Task.perform` for tasks that cannot fail:
 
