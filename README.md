@@ -11,3 +11,4 @@ Progress and learning notes for each day:
 * [Day 8: Using union types in a binary tree implementation](./day-08.md)
 * [Day 9: Maybe, Result, Task](./day-09.md)
 * [Day 10: Tasks](./day-10.md)
+* [Day 11: JSON, "Scaling Elm" examples](./day-11.md)
