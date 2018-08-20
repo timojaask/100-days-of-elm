@@ -14,3 +14,4 @@ Progress and learning notes for each day:
 * [Day 11: JSON, "Scaling Elm" examples](./day-11.md)
 * [Day 12: Modules](./day-12.md)
 * [Day 13: Webpack, deploy to Netlify.com](./day-13.md)
+* [Day 14: Issues I faced building Elm projects](./day-14.md)
