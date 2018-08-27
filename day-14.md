@@ -22,4 +22,4 @@ Today I'm going to continue to work on [larisadeac.com](https://github.com/timoj
 
 Now, the problem is, there is no "best practice" way of bundling your images in Elm. There are a few solutions that I've seen in the wild, but they all feel a bit off. In fact, this is so frustrating for me right now, that I felt like writing a small rant on [issues-with-elm.md](./issues-with-elm.md). Hopefully it's all just my own incompetence and lack of experience, and there are actually good solutions to the challenges that I faced so far.
 
-So that this wouldn't sound like just a useless rant, next I'm going to write about all the different solutions to the issues that I listed in the document above. This will require seeking varioud solutions, trying them out, comparing, and writing about them. Looking forward to doing that tomorrow!
+So that this wouldn't sound like a completely useless rant, next I'm going to write about all the different solutions to the issues that I listed in the document above. This will require seeking various solutions, trying them out, comparing, and writing about them. Looking forward to doing that tomorrow!
