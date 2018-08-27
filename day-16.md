@@ -33,3 +33,19 @@ Compilation failed while attempting to build /Users/timojaask/projects/temp/quat
 I have no idea what is it talking about, since I don't have `quatfix/tests/tests` anywhere in the `"source-direcotires"`. In fact, the root `elm.json` doesn't have `source-directories` at all, and the one inside the `test` folder certainly doesn't contain anything like what the error suggests it might.
 
 So right now I don't know how to run the tests.
+
+Left an issue regarding this at the original project's github: https://github.com/kfish/quaternion/issues/2
+
+For now I'll leave the quaternion issue for another day, and get back to learning Elm 0.19.
+
+---
+
+Going through the new [Elm guide](https://guide.elm-lang.org), I'm going to try to update the old code samples with new code and list the changes here.
+
+First up, the [buttons example](./user-input/buttons.elm).
+
+To begin with, the `Html.beginnerProgram` has been replaced with `Browser.sandbox`. In fact, all of the "programs" have been replaced by [Browser](https://package.elm-lang.org/packages/elm/browser/latest/).
+
+Then, once I ran `elm reactor`, it told me that I need to initialize my project. So I went ahead and created [elm.json](./elm.json), and removed the old `elm-package.json`.
+
+Finally, `Basics.toString` was replaced by `String.fromInt` and `String.fromFloat`, so I had to replace that as well.
