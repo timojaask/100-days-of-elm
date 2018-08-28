@@ -16,4 +16,5 @@ Progress and learning notes for each day:
 * [Day 13: Webpack, deploy to Netlify.com](./day-13.md)
 * [Day 14: Issues I faced building Elm projects](./day-14.md)
 * [Day 15: Elm 0.19 release, update on issues](./day-15.md)
-* [Day 16: Elm 0.19 conversion experience](./day-16.md)
+* [Day 16: Elm 0.19 conversion experience, re-reading Elm guide](./day-16.md)
+* [Day 17: Re-reading Elm guide](./day-17.md)

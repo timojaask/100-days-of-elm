@@ -1,10 +1,11 @@
+import Browser
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onInput, onClick)
-import Regex exposing (regex)
+import Regex exposing (Regex)
 
 main =
-  Html.beginnerProgram { model = model, view = view, update = update }
+  Browser.sandbox { init = init, view = view, update = update }
 
 -- MODEL
 type alias Model =
@@ -16,8 +17,9 @@ type alias Model =
   , surprise : Bool
   , submitted : Bool
   }
-model : Model
-model =
+  
+init : Model
+init =
   Model "" "" "" "" False False False
 
 -- UPDATE
@@ -51,15 +53,19 @@ update msg model =
 view : Model -> Html Msg
 view model =
   div []
-    [ input [ type_ "text", placeholder "Name", onInput Name ] []
-    , input [ type_ "password", placeholder "Password", onInput Password ] []
-    , input [ type_ "password", placeholder "Re-enter password", onInput PasswordAgain ] []
-    , input [ type_ "text", placeholder "Age", onInput Age ] []
+    [ viewInput "text" "Name" model.name Name
+    , viewInput "password" "Password" model.password Password
+    , viewInput "password" "Re-enter password" model.passwordAgain PasswordAgain
+    , viewInput "text" "Age" model.age Age
     , button [ onClick Submit ] [ text "Submit" ]
     , checkbox ToggleSubscribe "Subscribe to newsletter"
     , checkbox ToggleSurprise "Want a surprise?"
     , viewValidation model
     ]
+
+viewInput : String -> String -> String -> (String -> msg) -> Html msg
+viewInput t p v toMsg =
+  input [ type_ t, placeholder p, value v, onInput toMsg ] []
 
 checkbox : msg -> String -> Html msg
 checkbox msg name =
@@ -75,15 +81,39 @@ viewValidation model =
         ("red", "Passwords do not match!", "block")
       else if String.length model.password < 8 then
         ("red", "Password must be at least 8 characters long!", "block")
-      else if not(Regex.contains (regex "[A-Z]") model.password) then
+      else if not(Regex.contains upperCase model.password) then
         ("red", "Password must have at least one uppercase character!", "block")
-      else if not(Regex.contains (regex "[a-z]") model.password) then
+      else if not(Regex.contains lowerCase model.password) then
         ("red", "Password must have at least one lowercase character!", "block")
-      else if not(Regex.contains (regex "[0-9]") model.password) then
+      else if not(Regex.contains someNumber model.password) then
         ("red", "Password must have at least one digit character!", "block")
-      else if Regex.contains (regex "[^0-9]") model.age then
+      else if Regex.contains onlyNumbers model.age then
         ("red", "Age must be a number", "block")
       else
         ("green", "OK", "block")
   in
-    div [ style [("color", color), ("display", display)] ] [ text message ]
+    div
+      [ style "color" color
+      , style "display" display
+      ]
+      [ text message ]
+
+lowerCase : Regex
+lowerCase =
+  Maybe.withDefault Regex.never <|
+    Regex.fromString "[a-z]"
+
+upperCase : Regex
+upperCase =
+  Maybe.withDefault Regex.never <|
+    Regex.fromString "[A-Z]"
+
+someNumber : Regex
+someNumber =
+  Maybe.withDefault Regex.never <|
+    Regex.fromString "[0-9]"
+
+onlyNumbers : Regex
+onlyNumbers =
+  Maybe.withDefault Regex.never <|
+    Regex.fromString "[^0-9]"

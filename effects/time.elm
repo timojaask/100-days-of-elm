@@ -1,30 +1,47 @@
+import Browser
 import Html exposing (Html)
 import Html.Events exposing (onClick)
 import Svg exposing (..)
 import Svg.Attributes exposing (..)
-import Time exposing (Time)
-import Date
+import Time
+import Task
 
-main = Html.program { init = init, view = view, update = update, subscriptions = subscriptions }
+main = Browser.element { init = init, view = view, update = update, subscriptions = subscriptions }
 
 -- MODEL
+
+type alias LocalTime =
+  { hour : Float
+  , minute : Float
+  , second : Float
+  }
+
 type alias Model = 
-  { time : Time
+  { zone : Time.Zone
+  , time : Time.Posix
   , isRunning : Bool
   }
 
-init : (Model, Cmd Msg)
-init = (Model 0 True, Cmd.none)
+init : () -> (Model, Cmd Msg)
+init _ =
+  ( Model Time.utc (Time.millisToPosix 0) True
+  , Task.perform AdjustTimeZone Time.here
+  )
 
 -- UPDATE
 type Msg
-  = Tick Time
+  = Tick Time.Posix
+  | AdjustTimeZone Time.Zone
   | ToggleIsRunning
 update : Msg -> Model -> (Model, Cmd Msg)
 update msg model =
   case msg of
     Tick newTime ->
       ({ model | time = newTime }, Cmd.none)
+
+    AdjustTimeZone newZone ->
+      ({ model | zone = newZone }, Cmd.none)
+
     ToggleIsRunning ->
       ({ model | isRunning = not model.isRunning }, Cmd.none)
 
@@ -32,58 +49,64 @@ update msg model =
 subscriptions : Model -> Sub Msg
 subscriptions model =
   if model.isRunning then
-    Time.every Time.second Tick
+    Time.every 1000 Tick
   else
     Sub.none
 
 -- VIEW
 view : Model -> Html Msg
 view model =
+  let
+    hour = toFloat (Time.toHour model.zone model.time)
+    minute = toFloat (Time.toMinute model.zone model.time)
+    second = toFloat (Time.toSecond model.zone model.time)
+    localTime = LocalTime hour minute second
+  in
     Html.div []
-    [ drawClock model.time
-    , text (debugTimeString model.time)
+    [ drawClock localTime
+    , text (debugTimeString localTime)
     , Html.button [ onClick ToggleIsRunning ] [ text "Start/Stop" ]
     ]
 
-drawClock : Time -> Html Msg
-drawClock time =
+drawClock : LocalTime -> Html Msg
+drawClock localTime =
   svg [ viewBox "0 0 100 100", width "300px" ]
     ( (drawClockBackground 50 50 45)
-    ++ (drawHourHand 50 50 time)
-    ++ (drawMinuteHand 50 50 time)
-    ++ (drawSecondHand 50 50 time)
+    ++ (drawHourHand 50 50 localTime)
+    ++ (drawMinuteHand 50 50 localTime)
+    ++ (drawSecondHand 50 50 localTime)
     )
 
 drawClockBackground : Float -> Float -> Float -> List (Html Msg)
 drawClockBackground bgCX bgCY bgR =
   (List.map (drawMinuteTick 50 50) (List.range 0 59)) ++
   [ circle -- White filled circle covering the minute ticks
-    [ cx (toString bgCX)
-    , cy (toString bgCY)
-    , r (toString (bgR - 6))
+    [ cx (String.fromFloat bgCX)
+    , cy (String.fromFloat bgCY)
+    , r (String.fromFloat (bgR - 6))
     , fill "white"
     ] []
   ] ++
   (List.map (drawHourTick 50 50) (List.range 0 11)) ++
   [ circle -- White filled circle covering the hour ticks
-    [ cx (toString bgCX)
-    , cy (toString bgCY)
-    , r (toString (bgR - 10))
+    [ cx (String.fromFloat bgCX)
+    , cy (String.fromFloat bgCY)
+    , r (String.fromFloat (bgR - 10))
     , fill "white"
     ] []
   ] ++
   [ circle -- Gray overall border
-    [ cx (toString bgCX)
-    , cy (toString bgCY)
-    , r (toString bgR)
+    [ cx (String.fromFloat bgCX)
+    , cy (String.fromFloat bgCY)
+    , r (String.fromFloat bgR)
     , fillOpacity "0"
     , strokeWidth "2px"
     , stroke "gray"
     ] []
   , circle -- white line covering outer ends of hour and minute ticks
-    [ cx (toString bgCX)
-    , cy (toString bgCY)
-    , r (toString (bgR - 2))
+    [ cx (String.fromFloat bgCX)
+    , cy (String.fromFloat bgCY)
+    , r (String.fromFloat (bgR - 2))
     , fillOpacity "0"
     , strokeWidth "2px"
     , stroke "white"
@@ -107,102 +130,92 @@ drawTick centerX centerY width maxValue value =
     handY = Tuple.second coords
   in
     line
-      [ x1 (toString centerX)
-      , y1 (toString centerY)
-      , x2 (toString handX)
-      , y2 (toString handY)
+      [ x1 (String.fromFloat centerX)
+      , y1 (String.fromFloat centerY)
+      , x2 (String.fromFloat handX)
+      , y2 (String.fromFloat handY)
       , stroke "#000000"
-      , strokeWidth (toString width)
+      , strokeWidth (String.fromFloat width)
       ] []
   
 
 
-drawSecondHand : Float -> Float -> Time -> List (Html Msg)
-drawSecondHand centerX centerY time =
+drawSecondHand : Float -> Float -> LocalTime -> List (Html Msg)
+drawSecondHand centerX centerY localTime =
   let
     handLength = 30
-    coords = secondHandCoord centerX centerY handLength time
+    coords = secondHandCoord centerX centerY handLength localTime
     handX = Tuple.first coords
     handY = Tuple.second coords
   in
   [ line
-    [ x1 (toString centerX)
-    , y1 (toString centerY)
-    , x2 (toString handX)
-    , y2 (toString handY)
+    [ x1 (String.fromFloat centerX)
+    , y1 (String.fromFloat centerY)
+    , x2 (String.fromFloat handX)
+    , y2 (String.fromFloat handY)
     , stroke "#FF0000"
     ] []
   , circle
-    [ cx (toString handX)
-    , cy (toString handY)
+    [ cx (String.fromFloat handX)
+    , cy (String.fromFloat handY)
     , r "3.7px"
     , fill "#FF0000"
     ] []
   ]
 
-drawMinuteHand : Float -> Float -> Time -> List (Html Msg)
-drawMinuteHand centerX centerY time =
+drawMinuteHand : Float -> Float -> LocalTime -> List (Html Msg)
+drawMinuteHand centerX centerY localTime =
   let
     handLength = 40
-    coords = minuteHandCoord centerX centerY handLength time
+    coords = minuteHandCoord centerX centerY handLength localTime
     handX = Tuple.first coords
     handY = Tuple.second coords
   in
     [ line
-      [ x1 (toString centerX)
-      , y1 (toString centerY)
-      , x2 (toString handX)
-      , y2 (toString handY)
+      [ x1 (String.fromFloat centerX)
+      , y1 (String.fromFloat centerY)
+      , x2 (String.fromFloat handX)
+      , y2 (String.fromFloat handY)
       , stroke "#000000"
       , strokeWidth "2px"
       ] []
     ]
 
-drawHourHand : Float -> Float -> Time -> List (Html Msg)
-drawHourHand centerX centerY time =
+drawHourHand : Float -> Float -> LocalTime -> List (Html Msg)
+drawHourHand centerX centerY localTime =
   let
     handLength = 30
-    coords = hourHandCoord centerX centerY handLength time
+    coords = hourHandCoord centerX centerY handLength localTime
     handX = Tuple.first coords
     handY = Tuple.second coords
   in
     [ line
-      [ x1 (toString centerX)
-      , y1 (toString centerY)
-      , x2 (toString handX)
-      , y2 (toString handY)
+      [ x1 (String.fromFloat centerX)
+      , y1 (String.fromFloat centerY)
+      , x2 (String.fromFloat handX)
+      , y2 (String.fromFloat handY)
       , stroke "#000000"
       , strokeWidth "4px"
       ] []
     ]
 
-debugTimeString : Time -> String
-debugTimeString time =
-  (toString (hour time)) ++ ":" ++ (toString (minute time)) ++ ":" ++ (toString (second time))
+debugTimeString : LocalTime -> String
+debugTimeString localTime =
+  (String.fromFloat localTime.hour) ++ ":" ++
+  (String.fromFloat localTime.minute) ++ ":" ++
+  (String.fromFloat localTime.second)
 
-second : Time -> Float
-second time =
-  toFloat (Date.second (Date.fromTime time))
+secondHandCoord : Float -> Float -> Float -> LocalTime -> (Float, Float)
+secondHandCoord cx cy r localTime =
+  handCoord cx cy r 60 localTime.second
 
-minute: Time -> Float
-minute time =
-  toFloat (Date.minute (Date.fromTime time))
+minuteHandCoord : Float -> Float -> Float -> LocalTime -> (Float, Float)
+minuteHandCoord cx cy r localTime =
+  handCoord cx cy r 60 localTime.minute
 
-hour: Time -> Float
-hour time =
-  toFloat (Date.hour (Date.fromTime time))
-
-secondHandCoord : Float -> Float -> Float -> Time -> (Float, Float)
-secondHandCoord cx cy r time =
-  handCoord cx cy r 60 (second time)
-
-minuteHandCoord : Float -> Float -> Float -> Time -> (Float, Float)
-minuteHandCoord cx cy r time =
-  handCoord cx cy r 60 (minute time)
-
-hourHandCoord : Float -> Float -> Float -> Time -> (Float, Float)
-hourHandCoord cx cy r time =
-  handCoord cx cy r 12 (hour time)
+hourHandCoord : Float -> Float -> Float -> LocalTime -> (Float, Float)
+hourHandCoord cx cy r localTime =
+  handCoord cx cy r 12 localTime.hour
 
 handCoord : Float -> Float -> Float -> Float -> Float -> (Float, Float)
 handCoord cx cy r maxValue curValue =
