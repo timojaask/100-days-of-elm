@@ -1,3 +1,5 @@
+## Day 16
+
 I had a few days off, because of non-stop traveling, events, and jetlag. Yesterday, I started slowly getting back into programming, by playing around with Elm, building a 3D rendering "engine". Any tips on how to better spend a Sunday evening?
 
 So today, I actually continued with that, and stumbled upon a library that helps with 3D transformations: [quaternion](https://github.com/kfish/quaternion), but unfortunately, it wasn't yet updated for Elm 0.19, and so I started trying to do that myself, which opened a huge can of worms.
