@@ -49,3 +49,11 @@ To begin with, the `Html.beginnerProgram` has been replaced with `Browser.sandbo
 Then, once I ran `elm reactor`, it told me that I need to initialize my project. So I went ahead and created [elm.json](./elm.json), and removed the old `elm-package.json`.
 
 Finally, `Basics.toString` was replaced by `String.fromInt` and `String.fromFloat`, so I had to replace that as well.
+
+---
+
+Next up, the [text input example](./user-input/text-input.elm). Replacing `Html.beginnerProgram` with `Browser.sandbox`.
+
+Then this time they added a `value model.content` attribute to the `input` element. The [value attribute](https://package.elm-lang.org/packages/elm/html/latest/Html-Attributes#value) "defines a default value which will be displayed in an input". So it's not a placeholder, not a value that can be set programmatically, but just a default value. Seems a bit redundant in this particular example.
+
+---
