@@ -320,5 +320,7 @@ This way we avoid both impossible states and we are forced to treat all the corr
 So something to consider here:
 
 > Two Maybes often means that we should consider a union type.
+>
 > Do we want two lists, or do we want one list with two fields per element?
+>
 > Can we revise our implementation without breaking builds? Has to be considered *ahead of time*.
