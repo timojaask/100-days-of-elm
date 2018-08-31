@@ -20,3 +20,4 @@ Progress and learning notes for each day:
 * [Day 17: Re-reading Elm guide](./day-17.md)
 * [Day 18: Life of a file talk](./day-18.md)
 * [Day 19: Life of a file talk, Making Impossible States Impossible talk](./day-19.md)
+* [Day 20: Scaling Elm Apps talk](./day-20.md)
