@@ -50,7 +50,7 @@ This way we can see what goes in (if anything!), and what comes out, and it grea
 
 ---
 
-Today I'm going to watch another (!) video by Richard Felman: [Make Data Structures](https://www.youtube.com/watch?v=x1FU3e0sT1I). Am I becoming a fanboy?
+Today I'm going to watch another (!) video by Richard Feldman: [Make Data Structures](https://www.youtube.com/watch?v=x1FU3e0sT1I). Am I becoming a fanboy?
 
 In this video Richard asks himself what would be the advice he would give to his past, less experienced Elm developer self? And the answer is that there are so many advices. But, one stands out most is this:
 
