@@ -23,3 +23,4 @@ Progress and learning notes for each day:
 * [Day 20: Scaling Elm Apps talk](./day-20.md)
 * [Day 21: Make Data Structures talk](./day-21.md)
 * [Day 22: Data structures: Tic Tac Toe](./day-22.md)
+* [Day 23: Data structures: Tic Tac Toe](./day-23.md)
