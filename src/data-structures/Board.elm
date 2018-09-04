@@ -1,4 +1,4 @@
-module Board exposing (Board, Cell, CellPosition, CellState(..), cellClicked, cells, newBoard)
+module Board exposing (Board, Cell, CellPosition, CellState(..), GameState(..), cellClicked, cells, newBoard)
 
 import Array exposing (Array)
 import Debug
@@ -12,6 +12,13 @@ type CellState
     = Empty
     | CellX
     | CellO
+
+
+type GameState
+    = Playing
+    | XWon
+    | OWon
+    | Draw
 
 
 type alias Cell =
@@ -96,24 +103,76 @@ cellIsEmpty cell =
             False
 
 
-cellClicked : Board -> CellPosition -> { board : Board, isDraw : Bool }
-cellClicked board position =
-    let
-        boardAfterX =
-            setCellState CellX board position
+getGameState : Board -> GameState
+getGameState board =
+    if hasWinningPosition board CellX then
+        XWon
 
-        endedWithDraw =
-            isDraw boardAfterX
-    in
-    if endedWithDraw then
-        { board = boardAfterX
-        , isDraw = True
-        }
+    else if hasWinningPosition board CellO then
+        OWon
+
+    else if isDraw board then
+        Draw
 
     else
-        { board = insertO boardAfterX
-        , isDraw = False
-        }
+        Playing
+
+
+playerMove : Board -> CellState -> CellPosition -> { board : Board, gameState : GameState }
+playerMove board player position =
+    let
+        boardAfter =
+            case findCell board position of
+                Nothing ->
+                    board
+
+                Just cell ->
+                    if cellIsEmpty cell then
+                        setCellState player board position
+
+                    else
+                        board
+    in
+    { board = boardAfter, gameState = getGameState boardAfter }
+
+
+cellClicked : Board -> CellPosition -> { board : Board, gameState : GameState }
+cellClicked board position =
+    let
+        gameState =
+            getGameState board
+    in
+    if gameState /= Playing then
+        { board = board, gameState = gameState }
+
+    else
+        case positionIsFree board position of
+            Nothing ->
+                { board = board, gameState = gameState }
+
+            Just isFree ->
+                if not isFree then
+                    { board = board, gameState = gameState }
+
+                else
+                    let
+                        stateAfterXmove =
+                            playerMove board CellX position
+                    in
+                    if stateAfterXmove.gameState /= Playing then
+                        stateAfterXmove
+
+                    else
+                        let
+                            oPosition =
+                                nextOPosition stateAfterXmove.board
+                        in
+                        case oPosition of
+                            Nothing ->
+                                stateAfterXmove
+
+                            Just nextPosition ->
+                                playerMove stateAfterXmove.board CellO nextPosition
 
 
 setCellState : CellState -> Board -> CellPosition -> Board
@@ -137,18 +196,38 @@ setCellState state (Board list) position =
         )
 
 
-insertO : Board -> Board
-insertO (Board list) =
+positionIsFree : Board -> CellPosition -> Maybe Bool
+positionIsFree board position =
+    case findCell board position of
+        Nothing ->
+            Nothing
+
+        Just cell ->
+            Just (cell.state == Empty)
+
+
+cellIsAtPosition : CellPosition -> Cell -> Bool
+cellIsAtPosition position cell =
+    cell.position.row == position.row && cell.position.col == position.col
+
+
+findCell : Board -> CellPosition -> Maybe Cell
+findCell (Board list) position =
+    List.head (List.filter (cellIsAtPosition position) list)
+
+
+nextOPosition : Board -> Maybe CellPosition
+nextOPosition (Board list) =
     let
         remainingCells =
             List.filter cellIsEmpty list
     in
     case List.head remainingCells of
         Nothing ->
-            Board list
+            Nothing
 
         Just cell ->
-            setCellState CellO (Board list) cell.position
+            Just cell.position
 
 
 isDraw : Board -> Bool
@@ -158,3 +237,63 @@ isDraw (Board list) =
             List.filter cellIsEmpty list
     in
     List.isEmpty remainingCells
+
+
+isInPositions : Board -> List CellPosition -> CellState -> Bool
+isInPositions board positions state =
+    List.all
+        (\position ->
+            case findCell board position of
+                Nothing ->
+                    False
+
+                Just cell ->
+                    cell.state == state
+        )
+        positions
+
+
+hasWinningPosition : Board -> CellState -> Bool
+hasWinningPosition board player =
+    List.any
+        (\winningPositionSet ->
+            isInPositions board winningPositionSet player
+        )
+        winningPositionSets
+
+
+winningPositionSets : List (List CellPosition)
+winningPositionSets =
+    [ [ { row = 0, col = 0 }
+      , { row = 0, col = 1 }
+      , { row = 0, col = 2 }
+      ]
+    , [ { row = 1, col = 0 }
+      , { row = 1, col = 1 }
+      , { row = 1, col = 2 }
+      ]
+    , [ { row = 2, col = 0 }
+      , { row = 2, col = 1 }
+      , { row = 2, col = 2 }
+      ]
+    , [ { row = 0, col = 0 }
+      , { row = 1, col = 0 }
+      , { row = 2, col = 0 }
+      ]
+    , [ { row = 0, col = 1 }
+      , { row = 1, col = 1 }
+      , { row = 2, col = 1 }
+      ]
+    , [ { row = 0, col = 2 }
+      , { row = 1, col = 2 }
+      , { row = 2, col = 2 }
+      ]
+    , [ { row = 0, col = 0 }
+      , { row = 1, col = 1 }
+      , { row = 2, col = 2 }
+      ]
+    , [ { row = 0, col = 2 }
+      , { row = 1, col = 1 }
+      , { row = 2, col = 0 }
+      ]
+    ]

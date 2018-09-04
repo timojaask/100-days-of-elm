@@ -107,14 +107,6 @@ setCellState state (Board list) position =
         )
 ```
 
-And now we can update our `cellClicked` to use the new function:
-
-```
-cellClicked : Board -> CellPosition -> Board
-cellClicked board position =
-    setCellState CellX board position
-```
-
 This syntax *is weird* for me. What's with the `&&` and `==` aligned like that? They don't represent nearly the same concepts in my head:
 
 ```
@@ -129,7 +121,15 @@ then
 
 🤷‍
 
-Back to the game. Would it be nicer if the internal board representation would be a flat list? Then mapping over it would be easier, and for now we didn't benefit from the 2D structure at all. We can leave it still 2D for the `cell` function that the UI would be using. Let's try flattening it:
+Back to the game. Now we can update our `cellClicked` to use the new function:
+
+```
+cellClicked : Board -> CellPosition -> Board
+cellClicked board position =
+    setCellState CellX board position
+```
+
+Would it be nicer if the internal board representation would be a flat list? Then mapping over it would be easier, and for now we didn't benefit from the 2D structure at all. We can leave it still 2D for the `cell` function that the UI would be using. Let's try flattening it:
 
 ```
 type Board

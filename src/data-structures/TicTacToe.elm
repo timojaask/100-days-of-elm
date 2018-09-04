@@ -1,7 +1,7 @@
-module Main exposing (AppState(..), Model, Msg(..), cellToString, init, main, styleBoard, styleCell, styleRow, update, view, viewBoard, viewCell)
+module Main exposing (Model, Msg(..), cellToString, init, main, styleBoard, styleCell, styleRow, update, view, viewBoard, viewCell)
 
 import Array exposing (Array)
-import Board exposing (Board, Cell, CellPosition, CellState(..))
+import Board exposing (Board, Cell, CellPosition, CellState(..), GameState(..))
 import Browser
 import Debug
 import Html exposing (Html)
@@ -17,16 +17,9 @@ main =
         }
 
 
-type AppState
-    = Playing
-    | Won
-    | Draw
-    | Lost
-
-
 type alias Model =
     { board : Board
-    , appState : AppState
+    , appState : GameState
     , statusText : String
     }
 
@@ -45,24 +38,17 @@ update msg model =
     case msg of
         CellClicked pos ->
             let
-                gameState =
+                result =
                     Board.cellClicked model.board pos
 
                 statusText =
                     "Clicked: row: " ++ String.fromInt pos.row ++ ", col: " ++ String.fromInt pos.col
             in
-            if gameState.isDraw then
-                { model
-                    | board = gameState.board
-                    , statusText = statusText
-                    , appState = Draw
-                }
-
-            else
-                { model
-                    | board = gameState.board
-                    , statusText = statusText
-                }
+            { model
+                | board = result.board
+                , statusText = statusText
+                , appState = result.gameState
+            }
 
 
 view : Model -> Html Msg
@@ -74,7 +60,7 @@ view model =
         ]
 
 
-viewAppState : AppState -> Html msg
+viewAppState : GameState -> Html msg
 viewAppState appState =
     let
         message =
@@ -82,13 +68,13 @@ viewAppState appState =
                 Playing ->
                     "Playing"
 
-                Won ->
+                XWon ->
                     "You won!"
 
                 Draw ->
                     "It's a draw!"
 
-                Lost ->
+                OWon ->
                     "You lost."
     in
     Html.div [] [ Html.text message ]

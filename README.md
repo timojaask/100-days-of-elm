@@ -24,3 +24,4 @@ Progress and learning notes for each day:
 * [Day 21: Make Data Structures talk](./day-21.md)
 * [Day 22: Data structures: Tic Tac Toe](./day-22.md)
 * [Day 23: Data structures: Tic Tac Toe](./day-23.md)
+* [Day 24: Elm workshop, Tic Tac Toe](./day-24.md)
