@@ -25,3 +25,4 @@ Progress and learning notes for each day:
 * [Day 22: Data structures: Tic Tac Toe](./day-22.md)
 * [Day 23: Data structures: Tic Tac Toe](./day-23.md)
 * [Day 24: Elm workshop, Tic Tac Toe](./day-24.md)
+* [Day 25: Pomodoro timer](./day-25.md)

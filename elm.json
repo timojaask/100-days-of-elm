@@ -2,7 +2,9 @@
     "type": "application",
     "source-directories": [
         "src",
-        "src/data-structures"
+        "src/data-structures",
+        "src/data-structures/Pomodoro",
+        "src/data-structures/TicTacToe"
     ],
     "elm-version": "0.19.0",
     "dependencies": {
