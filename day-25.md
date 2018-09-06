@@ -2,7 +2,13 @@
 
 Quick review of day 24:
 
-TODO
+Yesterday I watched the beginning of [Richard Feldman's Elm workshop on Frontend Masters](https://frontendmasters.com/workshops/elm-v2/). His comparison of Elm to popular JavaScript frontend frameworks was quite interesting. There is a lot of choices to make when starting a frontend project using a JS, but in Elm, you almost everything is decided for you -- language dialect, state management, async operations, package manager, building UI interfaces, utilities -- all is built right into Elm itself. Even formatting -- you no longer need to fight with co-workers over spaces or tabs, or semicolons.
+
+Another thing I finally learned was that `if .. then` in Elm is called *if-expression*, not statement. `if` in Elm is like the conditional expression in JavaScript (`status = temp > 40 ? "hot" : "not hot"`) -- they require the `else` case, and return a value. This is very different from the JavaScript `if` statement, because the `if` statement does not return a value, and does not require the `else` case.
+
+I only watched the intro of the workshop. I think I'll want to watch the actual edited lessons, once they're available.
+
+Next I continued working on the Tic-Tac-Toe implementation and completed it. I don't think I learned much new there, but I did struggle quite a bit with it. One obvious issue is that the bot player is very stupid, but putting that aside the game works. However, I am still not happy with the way the code looks, and I don't know if it's me or Elm (I'm guessing it's me).
 
 --- 
 
