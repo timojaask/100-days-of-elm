@@ -3,6 +3,7 @@
     "source-directories": [
         "src",
         "src/data-structures",
+        "src/data-structures/BorderQuiz",
         "src/data-structures/Pomodoro",
         "src/data-structures/TicTacToe"
     ],
