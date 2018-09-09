@@ -29,3 +29,4 @@ Progress and learning notes for each day:
 * [Day 26: Border quiz](./day-26.md)
 * [Day 27: Border quiz](./day-27.md)
 * [Day 28: Border quiz, function composition, point-free, list splitting](./day-28.md)
+* [Day 29: Border quiz](./day-29.md)

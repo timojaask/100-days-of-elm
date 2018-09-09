@@ -4,16 +4,21 @@ import Browser
 import Debug
 import Html exposing (Attribute, Html, button, div, form, input, option, select, text)
 import Html.Attributes exposing (style, type_, value)
-import Html.Events exposing (onInput, onSubmit)
+import Html.Events exposing (onClick, onInput, onSubmit)
 
 
 main =
     Browser.sandbox { init = init, view = view, update = update }
 
 
+
+-- MODEL
+
+
 type Model
     = LoadingError String
     | Playing PlayingModel
+    | Finished PlayingModel
 
 
 type alias Country =
@@ -33,6 +38,7 @@ type alias CountrySet =
 type alias PlayingModel =
     { quiz : Quiz
     , answerInputValue : String
+    , selectedSetName : String
     }
 
 
@@ -45,14 +51,23 @@ type alias Quiz =
     }
 
 
+
+-- INIT
+
+
 init : Model
 init =
-    case initQuiz countries of
+    initGameWithCountries countries
+
+
+initGameWithCountries : List Country -> Model
+initGameWithCountries countryList =
+    case initQuiz countryList of
         Nothing ->
             LoadingError "Failed to parse countries"
 
         Just quiz ->
-            Playing (PlayingModel quiz "")
+            Playing (PlayingModel quiz "" "")
 
 
 initQuiz : List Country -> Maybe Quiz
@@ -65,9 +80,59 @@ initQuiz countriesList =
             Just (Quiz [] first rest [] first.neighbors)
 
 
+
+-- UPDATE
+
+
 type Msg
     = AnswerInputFormSubmitted
     | AnswerInputTextChanged String
+    | Restart
+    | SetSelectedCountrySet String
+
+
+update : Msg -> Model -> Model
+update msg model =
+    let
+        maybePlayingModel =
+            case model of
+                LoadingError _ ->
+                    Nothing
+
+                Playing playingModel ->
+                    Just playingModel
+
+                Finished playingModel ->
+                    Just playingModel
+    in
+    case maybePlayingModel of
+        Nothing ->
+            model
+
+        Just playingModel ->
+            case msg of
+                AnswerInputTextChanged str ->
+                    Playing { playingModel | answerInputValue = str }
+
+                AnswerInputFormSubmitted ->
+                    let
+                        result =
+                            updateWithAnswer playingModel
+
+                        newPlayingModel =
+                            result.playingModel
+                    in
+                    if result.gameOver then
+                        Finished newPlayingModel
+
+                    else
+                        Playing newPlayingModel
+
+                Restart ->
+                    initGameWithCountries (countriesBySetName countries playingModel.selectedSetName)
+
+                SetSelectedCountrySet setName ->
+                    Playing { playingModel | selectedSetName = setName }
 
 
 answerToNeighborId : Quiz -> String -> Maybe Int
@@ -100,64 +165,75 @@ removeIdFromList list id =
         list
 
 
-updateWithCorrectAnswer : Int -> Quiz -> Quiz
+updateWithCorrectAnswer : Int -> Quiz -> { quiz : Quiz, gameOver : Bool }
 updateWithCorrectAnswer neighborId quiz =
     if List.length quiz.neighborsLeft == 1 then
         -- Guessed all neighbors of this country
         case quiz.nextCountries of
             [] ->
                 -- All countries gussed! Quiz finished!
-                { quiz
-                    | neighborsGuessed = neighborId :: quiz.neighborsGuessed
-                    , neighborsLeft = []
+                { quiz =
+                    { quiz
+                        | neighborsGuessed = neighborId :: quiz.neighborsGuessed
+                        , neighborsLeft = []
+                    }
+                , gameOver = True
                 }
 
             head :: tail ->
                 -- Move to the next country
-                { quiz
-                    | playedCountries = quiz.currentCountry :: quiz.playedCountries
-                    , currentCountry = head
-                    , nextCountries = tail
-                    , neighborsGuessed = []
-                    , neighborsLeft = head.neighbors
+                { quiz =
+                    { quiz
+                        | playedCountries = quiz.currentCountry :: quiz.playedCountries
+                        , currentCountry = head
+                        , nextCountries = tail
+                        , neighborsGuessed = []
+                        , neighborsLeft = head.neighbors
+                    }
+                , gameOver = False
                 }
 
     else
         -- Update guessed neighbors
-        { quiz
-            | neighborsGuessed = neighborId :: quiz.neighborsGuessed
-            , neighborsLeft = removeIdFromList quiz.neighborsLeft neighborId
+        { quiz =
+            { quiz
+                | neighborsGuessed = neighborId :: quiz.neighborsGuessed
+                , neighborsLeft = removeIdFromList quiz.neighborsLeft neighborId
+            }
+        , gameOver = False
         }
 
 
-updateWithAnswer : PlayingModel -> PlayingModel
+updateWithAnswer : PlayingModel -> { playingModel : PlayingModel, gameOver : Bool }
 updateWithAnswer playingModel =
     case answerToNeighborId playingModel.quiz playingModel.answerInputValue of
         Nothing ->
             -- Incorrect answer
-            playingModel
+            { playingModel = playingModel, gameOver = False }
 
         Just neighborId ->
             -- Correct answer
-            { playingModel
-                | quiz = updateWithCorrectAnswer neighborId playingModel.quiz
-                , answerInputValue = ""
+            let
+                result =
+                    updateWithCorrectAnswer neighborId playingModel.quiz
+
+                newQuiz =
+                    result.quiz
+
+                gameOver =
+                    result.gameOver
+            in
+            { playingModel =
+                { playingModel
+                    | quiz = newQuiz
+                    , answerInputValue = ""
+                }
+            , gameOver = gameOver
             }
 
 
-update : Msg -> Model -> Model
-update msg model =
-    case model of
-        LoadingError errorMessage ->
-            model
 
-        Playing playingModel ->
-            case msg of
-                AnswerInputTextChanged str ->
-                    Playing { playingModel | answerInputValue = str }
-
-                AnswerInputFormSubmitted ->
-                    Playing (updateWithAnswer playingModel)
+-- VIEW
 
 
 view : Model -> Html Msg
@@ -167,7 +243,10 @@ view model =
             viewError errorMessage
 
         Playing playingModel ->
-            viewQuiz playingModel
+            viewQuiz playingModel False
+
+        Finished playingModel ->
+            viewQuiz playingModel True
 
 
 viewLoading : String -> Html msg
@@ -180,8 +259,8 @@ viewError errorMessage =
     div [] [ text errorMessage ]
 
 
-viewQuiz : PlayingModel -> Html Msg
-viewQuiz { quiz, answerInputValue } =
+viewQuiz : PlayingModel -> Bool -> Html Msg
+viewQuiz { quiz, answerInputValue } showCongratulations =
     let
         styleQuizDiv =
             [ style "display" "flex"
@@ -195,7 +274,19 @@ viewQuiz { quiz, answerInputValue } =
         , viewCurrentCountryProgress quiz
         , viewOverallProgress quiz
         , viewMenu
+        , viewCongratulations showCongratulations
         ]
+
+
+viewCongratulations : Bool -> Html msg
+viewCongratulations showCongratulations =
+    if showCongratulations then
+        div
+            [ style "color" "green" ]
+            [ text "You won!" ]
+
+    else
+        div [] []
 
 
 viewCheat : Quiz -> Html msg
@@ -252,8 +343,8 @@ viewOverallProgress quiz =
 viewMenu : Html Msg
 viewMenu =
     div []
-        [ button [] [ text "Restart" ]
-        , select []
+        [ button [ onClick Restart ] [ text "Restart" ]
+        , select [ onInput SetSelectedCountrySet ]
             viewCountrySetOptions
         ]
 
@@ -262,9 +353,13 @@ viewCountrySetOptions : List (Html Msg)
 viewCountrySetOptions =
     List.map
         (\set ->
-            option [] [ text set.name ]
+            option [ value set.name ] [ text set.name ]
         )
-        continents
+        countrySets
+
+
+
+-- DATA
 
 
 countryFirstName : Country -> String
@@ -277,15 +372,6 @@ countryFirstName country =
             name
 
 
-continentById : Int -> Maybe CountrySet
-continentById id =
-    List.head
-        (List.filter
-            (\continent -> continent.id == id)
-            continents
-        )
-
-
 countryById : Int -> Maybe Country
 countryById id =
     List.head
@@ -293,16 +379,6 @@ countryById id =
             (\country -> country.id == id)
             countries
         )
-
-
-continentNameById : Int -> String
-continentNameById id =
-    case continentById id of
-        Nothing ->
-            ""
-
-        Just continent ->
-            continent.name
 
 
 countryFirstNameById : Int -> String
@@ -315,17 +391,6 @@ countryFirstNameById id =
             countryFirstName country
 
 
-continentIdsToString : List Int -> String
-continentIdsToString idList =
-    List.foldl
-        (\id ->
-            \acc ->
-                acc ++ continentNameById id ++ ", "
-        )
-        ""
-        idList
-
-
 countryIdsToNames : List Int -> String
 countryIdsToNames =
     List.map countryFirstNameById
@@ -333,11 +398,50 @@ countryIdsToNames =
         >> String.concat
 
 
-continents : List CountrySet
-continents =
-    [ CountrySet 0 "Asia"
+findSetByName : String -> Maybe CountrySet
+findSetByName name =
+    List.head
+        (List.filter
+            (\set -> set.name == name)
+            countrySets
+        )
+
+
+countriesBySetName : List Country -> String -> List Country
+countriesBySetName allCountries setName =
+    case findSetByName setName of
+        Nothing ->
+            []
+
+        Just set ->
+            countriesBySet allCountries set
+
+
+countriesBySet : List Country -> CountrySet -> List Country
+countriesBySet allCountries countrySet =
+    if countrySet.id == allCountriesSetId then
+        allCountries
+
+    else
+        List.filter
+            (\country ->
+                List.any
+                    (\continentId -> continentId == countrySet.id)
+                    country.continents
+            )
+            allCountries
+
+
+allCountriesSetId =
+    999
+
+
+countrySets : List CountrySet
+countrySets =
+    -- The order of items in this list determines the order of items in the UI.
+    [ CountrySet allCountriesSetId "All"
+    , CountrySet 0 "Asia"
     , CountrySet 1 "Africa"
-    , CountrySet 2 "Antarctica"
     , CountrySet 3 "Oceania"
     , CountrySet 4 "Europe"
     , CountrySet 5 "North America"
