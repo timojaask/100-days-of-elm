@@ -6,7 +6,7 @@ import Html exposing (Attribute, Html, button, div, form, input, option, select,
 import Html.Attributes exposing (style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import NonEmptyList exposing (NonEmptyList)
-import SelectedItemList exposing (SelectedItemList)
+import SelectedItemList exposing (CountrySet, SelectedItemList)
 
 
 main =
@@ -36,16 +36,10 @@ type alias Country =
     }
 
 
-type alias CountrySet =
-    { id : Int
-    , name : String
-    }
-
-
 type alias PlayingModel =
     { quiz : Quiz
     , answerInputValue : String
-    , selectedSetName : String
+    , countrySets : SelectedItemList CountrySet
     }
 
 
