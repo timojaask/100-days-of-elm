@@ -1,4 +1,4 @@
-module NonEmptyList exposing (NonEmptyList, dropOne, head, init, tail, toList)
+module NonEmptyList exposing (NonEmptyList, dropOne, filter, head, init, tail, toList)
 
 
 type NonEmptyList a
@@ -36,3 +36,17 @@ dropOne (NonEmptyList nonEmptyList) =
 
         Just newHead ->
             Just (NonEmptyList { head = newHead, tail = List.drop 1 nonEmptyList.tail })
+
+
+filter : (a -> Bool) -> NonEmptyList a -> Maybe (NonEmptyList a)
+filter fn nonEmptyList =
+    let
+        filteredList =
+            List.filter fn (toList nonEmptyList)
+    in
+    case filteredList of
+        [] ->
+            Nothing
+
+        head_ :: tail_ ->
+            Just (init head_ tail_)

@@ -3,7 +3,7 @@ module Main exposing (main)
 import Browser exposing (Document)
 import Debug
 import Html exposing (Attribute, Html, button, div, form, input, option, select, text)
-import Html.Attributes exposing (style, type_, value)
+import Html.Attributes exposing (selected, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import NonEmptyList exposing (NonEmptyList)
 import SelectedItemList exposing (CountrySet, SelectedItemList)
@@ -58,42 +58,47 @@ type alias Quiz =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    case defaultSetName of
-        Nothing ->
-            ( LoadingError "Failed to parse country sets", Cmd.none )
-
-        Just setName ->
-            ( Playing (initGameWithCountries countries setName), Cmd.none )
+    ( initWithCountrySet (SelectedItemList.selectedItem countrySets) countrySets
+    , Cmd.none
+    )
 
 
-initGameWithCountries : List Country -> String -> Model
-initGameWithCountries countryList selectedSetName =
-    case initPlayingModel countryList selectedSetName of
-        Nothing ->
-            LoadingError "Failed to parse countries"
+initWithCountrySet : CountrySet -> SelectedItemList CountrySet -> Model
+initWithCountrySet set countrySets_ =
+    -- Filter countries by set.id or if set is allCountriesSetId, then don't filter
+    if set.id == allCountriesSetId then
+        playingStateFromList countries countrySets_
 
-        Just playingModel ->
-            Playing playingModel
+    else
+        let
+            maybeFilteredList =
+                NonEmptyList.filter
+                    (\country ->
+                        List.any (\id -> id == set.id) country.continents
+                    )
+                    countries
+        in
+        case maybeFilteredList of
+            Nothing ->
+                LoadingError "Failed to find countries for this country set"
+
+            Just filteredList ->
+                playingStateFromList filteredList countrySets_
 
 
-initPlayingModel : List Country -> String -> Maybe PlayingModel
-initPlayingModel countryList selectedSetName =
-    case initQuiz countryList of
-        Nothing ->
-            Nothing
-
-        Just quiz ->
-            Just (PlayingModel quiz "" selectedSetName)
-
-
-initQuiz : List Country -> Maybe Quiz
-initQuiz countriesList =
-    case countriesList of
-        [] ->
-            Nothing
-
-        first :: rest ->
-            Just (Quiz [] first rest [] first.neighbors)
+playingStateFromList : NonEmptyList Country -> SelectedItemList CountrySet -> Model
+playingStateFromList list countrySets_ =
+    Playing
+        (PlayingModel
+            { playedCountries = []
+            , currentCountry = NonEmptyList.head list
+            , nextCountries = NonEmptyList.tail list
+            , neighborsGuessed = []
+            , neighborsLeft = (NonEmptyList.head list).neighbors
+            }
+            ""
+            countrySets_
+        )
 
 
 
@@ -126,41 +131,26 @@ update msg model =
             ( model, Cmd.none )
 
         Just playingModel ->
-            let
-                result =
-                    updatePlayingModel msg playingModel
-            in
-            case result.gameOver of
-                False ->
-                    ( Playing result.playingModel, Cmd.none )
+            case msg of
+                AnswerInputTextChanged str ->
+                    ( Playing { playingModel | answerInputValue = str }, Cmd.none )
 
-                True ->
-                    ( Finished result.playingModel, Cmd.none )
+                AnswerInputFormSubmitted ->
+                    let
+                        result =
+                            updateWithAnswer playingModel
+                    in
+                    if result.gameOver then
+                        ( Finished result.playingModel, Cmd.none )
 
+                    else
+                        ( Playing result.playingModel, Cmd.none )
 
-updatePlayingModel : Msg -> PlayingModel -> { playingModel : PlayingModel, gameOver : Bool, loadingError : Maybe String }
-updatePlayingModel msg playingModel =
-    case msg of
-        AnswerInputTextChanged str ->
-            { playingModel = { playingModel | answerInputValue = str }, gameOver = False, loadingError = Nothing }
+                Restart ->
+                    ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
 
-        AnswerInputFormSubmitted ->
-            let
-                result =
-                    updateWithAnswer playingModel
-            in
-            { playingModel = result.playingModel, gameOver = result.gameOver, loadingError = Nothing }
-
-        Restart ->
-            initGameWithCountries
-                (countriesBySetName
-                    countries
-                    playingModel.selectedSetName
-                )
-                playingModel.selectedSetName
-
-        SetSelectedCountrySet setName ->
-            Playing { playingModel | selectedSetName = setName }
+                SetSelectedCountrySet setName ->
+                    ( Playing { playingModel | countrySets = SelectedItemList.setSelectedSet setName playingModel.countrySets }, Cmd.none )
 
 
 answerToNeighborId : Quiz -> String -> Maybe Int
@@ -383,9 +373,10 @@ viewMenu =
 
 viewCountrySetOptions : List (Html Msg)
 viewCountrySetOptions =
-    List.map
-        (\set ->
-            option [ value set.name ] [ text set.name ]
+    SelectedItemList.map
+        (\isSelected ->
+            \set ->
+                option [ value set.name, selected isSelected ] [ text set.name ]
         )
         countrySets
 
