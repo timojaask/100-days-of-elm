@@ -33,3 +33,4 @@ Progress and learning notes for each day:
 * [Day 30: Border quiz, web apps](./day-30.md)
 * [Day 31: Border quiz](./day-31.md)
 * [Day 32: Border quiz](./day-32.md)
+* [Day 33: Border quiz](./day-33.md)

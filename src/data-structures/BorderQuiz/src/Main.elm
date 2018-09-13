@@ -6,6 +6,7 @@ import Html exposing (Attribute, Html, button, div, form, input, option, select,
 import Html.Attributes exposing (selected, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import NonEmptyList exposing (NonEmptyList)
+import Random.List exposing (shuffle)
 import SelectedItemList exposing (CountrySet, SelectedItemList)
 
 
@@ -85,6 +86,26 @@ initWithCountrySet set countrySets_ =
             Just filteredList ->
                 playingStateFromList filteredList countrySets_
 
+filterCountriesBySet : CountrySet -> NonEmptyList Country
+filterCountriesBySet set =
+-- Filter countries by set.id or if set is allCountriesSetId, then don't filter
+    if set.id == allCountriesSetId then
+        countries
+    else
+        let
+            maybeFilteredList =
+                NonEmptyList.filter
+                    (\country ->
+                        List.any (\id -> id == set.id) country.continents
+                    )
+                    countries
+        in
+        case maybeFilteredList of
+            Nothing ->
+                LoadingError "Failed to find countries for this country set"
+
+            Just filteredList ->
+                playingStateFromList filteredList countrySets_
 
 playingStateFromList : NonEmptyList Country -> SelectedItemList CountrySet -> Model
 playingStateFromList list countrySets_ =
@@ -110,6 +131,7 @@ type Msg
     | AnswerInputTextChanged String
     | Restart
     | SetSelectedCountrySet String
+    | ShuffledCountries (List Country)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -151,6 +173,12 @@ update msg model =
 
                 SetSelectedCountrySet setName ->
                     ( Playing { playingModel | countrySets = SelectedItemList.setSelectedSet setName playingModel.countrySets }, Cmd.none )
+
+                ShuffledCountries shuffledCountries ->
+                    ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
+
+countriesShuffled : CountrySet -> Generator (List Country)
+countriesShuffled set =
 
 
 answerToNeighborId : Quiz -> String -> Maybe Int
@@ -331,12 +359,19 @@ viewAnswerInput val =
 
 viewCurrentCountryProgress : Quiz -> Html msg
 viewCurrentCountryProgress quiz =
+    let
+        numCompleted =
+            List.length quiz.neighborsGuessed
+
+        numTotal =
+            List.length quiz.neighborsLeft + numCompleted
+    in
     div []
         [ text
             ("( "
-                ++ String.fromInt (List.length quiz.neighborsGuessed)
+                ++ String.fromInt numCompleted
                 ++ " / "
-                ++ String.fromInt (List.length quiz.neighborsLeft)
+                ++ String.fromInt numTotal
                 ++ " ) "
                 ++ countryIdsToNames quiz.neighborsGuessed
             )
@@ -349,15 +384,15 @@ viewOverallProgress quiz =
         numCompleted =
             List.length quiz.playedCountries
 
-        numLeft =
-            List.length quiz.nextCountries + 1
+        numTotal =
+            List.length quiz.nextCountries + 1 + numCompleted
     in
     div []
         [ text
             ("Overall progress: "
                 ++ String.fromInt numCompleted
                 ++ " / "
-                ++ String.fromInt numLeft
+                ++ String.fromInt numTotal
             )
         ]
 
