@@ -34,3 +34,4 @@ Progress and learning notes for each day:
 * [Day 31: Border quiz](./day-31.md)
 * [Day 32: Border quiz](./day-32.md)
 * [Day 33: Border quiz](./day-33.md)
+* [Day 34: Border quiz -- what do with with all the Maybes?](./day-34.md)

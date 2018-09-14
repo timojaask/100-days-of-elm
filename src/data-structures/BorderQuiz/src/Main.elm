@@ -86,11 +86,13 @@ initWithCountrySet set countrySets_ =
             Just filteredList ->
                 playingStateFromList filteredList countrySets_
 
+
 filterCountriesBySet : CountrySet -> NonEmptyList Country
 filterCountriesBySet set =
--- Filter countries by set.id or if set is allCountriesSetId, then don't filter
+    -- Filter countries by set.id or if set is allCountriesSetId, then don't filter
     if set.id == allCountriesSetId then
         countries
+
     else
         let
             maybeFilteredList =
@@ -106,6 +108,7 @@ filterCountriesBySet set =
 
             Just filteredList ->
                 playingStateFromList filteredList countrySets_
+
 
 playingStateFromList : NonEmptyList Country -> SelectedItemList CountrySet -> Model
 playingStateFromList list countrySets_ =
@@ -176,9 +179,6 @@ update msg model =
 
                 ShuffledCountries shuffledCountries ->
                     ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
-
-countriesShuffled : CountrySet -> Generator (List Country)
-countriesShuffled set =
 
 
 answerToNeighborId : Quiz -> String -> Maybe Int
@@ -456,34 +456,6 @@ countryIdsToNames =
         >> String.concat
 
 
-findSetByName : String -> Maybe CountrySet
-findSetByName name =
-    List.head
-        (List.filter
-            (\set -> set.name == name)
-            (SelectedItemList.toList countrySets)
-        )
-
-
-findSetById : Int -> Maybe CountrySet
-findSetById id =
-    List.head
-        (List.filter
-            (\set -> set.id == id)
-            (SelectedItemList.toList countrySets)
-        )
-
-
-countriesBySetName : List Country -> String -> List Country
-countriesBySetName allCountries setName =
-    case findSetByName setName of
-        Nothing ->
-            []
-
-        Just set ->
-            countriesBySet allCountries set
-
-
 countriesBySet : List Country -> CountrySet -> List Country
 countriesBySet allCountries countrySet =
     if countrySet.id == allCountriesSetId then
@@ -501,16 +473,6 @@ countriesBySet allCountries countrySet =
 
 allCountriesSetId =
     999
-
-
-defaultSetName : Maybe String
-defaultSetName =
-    case findSetById allCountriesSetId of
-        Nothing ->
-            Nothing
-
-        Just set ->
-            Just set.name
 
 
 countrySets : SelectedItemList CountrySet
