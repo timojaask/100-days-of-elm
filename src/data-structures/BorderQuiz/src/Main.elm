@@ -87,29 +87,6 @@ initWithCountrySet set countrySets_ =
                 playingStateFromList filteredList countrySets_
 
 
-filterCountriesBySet : CountrySet -> NonEmptyList Country
-filterCountriesBySet set =
-    -- Filter countries by set.id or if set is allCountriesSetId, then don't filter
-    if set.id == allCountriesSetId then
-        countries
-
-    else
-        let
-            maybeFilteredList =
-                NonEmptyList.filter
-                    (\country ->
-                        List.any (\id -> id == set.id) country.continents
-                    )
-                    countries
-        in
-        case maybeFilteredList of
-            Nothing ->
-                LoadingError "Failed to find countries for this country set"
-
-            Just filteredList ->
-                playingStateFromList filteredList countrySets_
-
-
 playingStateFromList : NonEmptyList Country -> SelectedItemList CountrySet -> Model
 playingStateFromList list countrySets_ =
     Playing
@@ -135,6 +112,40 @@ type Msg
     | Restart
     | SetSelectedCountrySet String
     | ShuffledCountries (List Country)
+
+
+update2 : Msg -> Model -> ( Model, Cmd Msg )
+update2 msg model =
+    case ( msg, model ) of
+        ( AnswerInputFormSubmitted, Playing playingModel ) ->
+            let
+                result =
+                    updateWithAnswer playingModel
+            in
+            if result.gameOver then
+                ( Finished result.playingModel, Cmd.none )
+
+            else
+                ( Playing result.playingModel, Cmd.none )
+
+        ( AnswerInputTextChanged str, Playing playingModel ) ->
+            ( Playing { playingModel | answerInputValue = str }, Cmd.none )
+
+        ( Restart, Playing playingModel ) ->
+            ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
+
+        ( Restart, Finished playingModel ) ->
+            ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
+
+        ( SetSelectedCountrySet setName, Playing playingModel ) ->
+            ( Playing { playingModel | countrySets = SelectedItemList.setSelectedSet setName playingModel.countrySets }, Cmd.none )
+
+        ( SetSelectedCountrySet setName, Finished playingModel ) ->
+            ( Finished { playingModel | countrySets = SelectedItemList.setSelectedSet setName playingModel.countrySets }, Cmd.none )
+
+        ( _, _ ) ->
+            -- Disregards messages that arrived at the wrong state.
+            ( model, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )

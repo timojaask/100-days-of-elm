@@ -35,4 +35,4 @@ So where would I need to do that? I need to filter the countries in two scenario
 
 Now that I look at my code, and where all the `Nothing`s live, I can see that I've ignored some other potential erros in my code. For example, `countryFirstNameById` simply returns an empty string if it can't find a country with a given ID. I'm doing the same thing in `answerToNeighborId`, `countryFirstName`. I do that even in `update`, but there, it's kind of understandable, because having a model in `LoadingError` state is not possible. But then again, we're in an impossible state situation.
 
-I think I could try to handly my Maybes better, give them a proper treatment instead of ignoring. Unfortunately, this is all I had time to do today, so I'll get back to this tomorrow.
+I think I could try to handle my Maybes better, give them a proper treatment instead of ignoring. Unfortunately, this is all I had time to do today, so I'll get back to this tomorrow.
