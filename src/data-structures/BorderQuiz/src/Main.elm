@@ -6,6 +6,7 @@ import Html exposing (Attribute, Html, button, div, form, input, option, select,
 import Html.Attributes exposing (selected, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import NonEmptyList exposing (NonEmptyList)
+import Random
 import Random.List exposing (shuffle)
 import SelectedItemList exposing (CountrySet, SelectedItemList)
 
@@ -68,7 +69,7 @@ initWithCountrySet : CountrySet -> SelectedItemList CountrySet -> Model
 initWithCountrySet set countrySets_ =
     -- Filter countries by set.id or if set is allCountriesSetId, then don't filter
     if set.id == allCountriesSetId then
-        playingStateFromList countries countrySets_
+        Playing (playingStateFromList countries countrySets_)
 
     else
         let
@@ -84,22 +85,38 @@ initWithCountrySet set countrySets_ =
                 LoadingError "Failed to find countries for this country set"
 
             Just filteredList ->
-                playingStateFromList filteredList countrySets_
+                Playing (playingStateFromList filteredList countrySets_)
 
 
-playingStateFromList : NonEmptyList Country -> SelectedItemList CountrySet -> Model
+filterAndShuffle : Int -> NonEmptyList Country -> Maybe (Random.Generator (List Country))
+filterAndShuffle setId countryList =
+    let
+        maybeFilteredList =
+            NonEmptyList.filter
+                (\country ->
+                    List.any (\id -> id == setId) country.continents
+                )
+                countryList
+    in
+    case maybeFilteredList of
+        Nothing ->
+            Nothing
+
+        Just filteredList ->
+            Just (shuffle (NonEmptyList.toList filteredList))
+
+
+playingStateFromList : NonEmptyList Country -> SelectedItemList CountrySet -> PlayingModel
 playingStateFromList list countrySets_ =
-    Playing
-        (PlayingModel
-            { playedCountries = []
-            , currentCountry = NonEmptyList.head list
-            , nextCountries = NonEmptyList.tail list
-            , neighborsGuessed = []
-            , neighborsLeft = (NonEmptyList.head list).neighbors
-            }
-            ""
-            countrySets_
-        )
+    PlayingModel
+        { playedCountries = []
+        , currentCountry = NonEmptyList.head list
+        , nextCountries = NonEmptyList.tail list
+        , neighborsGuessed = []
+        , neighborsLeft = (NonEmptyList.head list).neighbors
+        }
+        ""
+        countrySets_
 
 
 
@@ -114,8 +131,8 @@ type Msg
     | ShuffledCountries (List Country)
 
 
-update2 : Msg -> Model -> ( Model, Cmd Msg )
-update2 msg model =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
     case ( msg, model ) of
         ( AnswerInputFormSubmitted, Playing playingModel ) ->
             let
@@ -146,50 +163,6 @@ update2 msg model =
         ( _, _ ) ->
             -- Disregards messages that arrived at the wrong state.
             ( model, Cmd.none )
-
-
-update : Msg -> Model -> ( Model, Cmd Msg )
-update msg model =
-    let
-        maybePlayingModel =
-            case model of
-                LoadingError _ ->
-                    Nothing
-
-                Playing playingModel ->
-                    Just playingModel
-
-                Finished playingModel ->
-                    Just playingModel
-    in
-    case maybePlayingModel of
-        Nothing ->
-            ( model, Cmd.none )
-
-        Just playingModel ->
-            case msg of
-                AnswerInputTextChanged str ->
-                    ( Playing { playingModel | answerInputValue = str }, Cmd.none )
-
-                AnswerInputFormSubmitted ->
-                    let
-                        result =
-                            updateWithAnswer playingModel
-                    in
-                    if result.gameOver then
-                        ( Finished result.playingModel, Cmd.none )
-
-                    else
-                        ( Playing result.playingModel, Cmd.none )
-
-                Restart ->
-                    ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
-
-                SetSelectedCountrySet setName ->
-                    ( Playing { playingModel | countrySets = SelectedItemList.setSelectedSet setName playingModel.countrySets }, Cmd.none )
-
-                ShuffledCountries shuffledCountries ->
-                    ( initWithCountrySet (SelectedItemList.selectedItem playingModel.countrySets) playingModel.countrySets, Cmd.none )
 
 
 answerToNeighborId : Quiz -> String -> Maybe Int

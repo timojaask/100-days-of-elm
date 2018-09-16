@@ -36,3 +36,4 @@ Progress and learning notes for each day:
 * [Day 33: Border quiz](./day-33.md)
 * [Day 34: Border quiz -- what do with with all the Maybes?](./day-34.md)
 * [Day 35: Dealing with comlex `update` functions](./day-35.md)
+* [Day 36: Preparing Border Quiz to use shuffle](./day-36.md)
