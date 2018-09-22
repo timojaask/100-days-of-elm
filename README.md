@@ -37,3 +37,4 @@ Progress and learning notes for each day:
 * [Day 34: Border quiz -- what do with with all the Maybes?](./day-34.md)
 * [Day 35: Dealing with comlex `update` functions](./day-35.md)
 * [Day 36: Preparing Border Quiz to use shuffle](./day-36.md)
+* [Day 37: Elm arcitecture in iOS & Swift](./day-37.md)
