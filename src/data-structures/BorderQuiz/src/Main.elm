@@ -2,8 +2,8 @@ module Main exposing (main)
 
 import Browser exposing (Document)
 import Debug
-import Html exposing (Attribute, Html, button, div, form, input, option, select, text)
-import Html.Attributes exposing (selected, style, type_, value)
+import Html exposing (Attribute, Html, button, div, form, h1, input, option, p, select, text)
+import Html.Attributes exposing (class, selected, style, type_, value)
 import Html.Events exposing (onClick, onInput, onSubmit)
 import NonEmptyList exposing (NonEmptyList)
 import Random
@@ -302,7 +302,8 @@ viewQuiz { quiz, answerInputValue } showCongratulations =
             ]
     in
     div styleQuizDiv
-        [ text ("Neighbors of " ++ countryFirstName quiz.currentCountry)
+        [ h1 [] [ text "Border Quiz" ]
+        , div [ class "question" ] [ text ("Neighbors of " ++ countryFirstName quiz.currentCountry) ]
         , viewCheat quiz
         , viewAnswerInput answerInputValue
         , viewCurrentCountryProgress quiz
@@ -316,7 +317,7 @@ viewCongratulations : Bool -> Html msg
 viewCongratulations showCongratulations =
     if showCongratulations then
         div
-            [ style "color" "green" ]
+            [ class "congratulations" ]
             [ text "You won!" ]
 
     else
@@ -325,7 +326,7 @@ viewCongratulations showCongratulations =
 
 viewCheat : Quiz -> Html msg
 viewCheat quiz =
-    div []
+    div [ class "cheat" ]
         [ text
             ("("
                 ++ countryIdsToNames quiz.neighborsLeft
@@ -336,7 +337,10 @@ viewCheat quiz =
 
 viewAnswerInput : String -> Html Msg
 viewAnswerInput val =
-    form [ onSubmit AnswerInputFormSubmitted ]
+    form
+        [ class "answerForm"
+        , onSubmit AnswerInputFormSubmitted
+        ]
         [ input [ type_ "text", onInput AnswerInputTextChanged, value val ] []
         ]
 
@@ -350,13 +354,13 @@ viewCurrentCountryProgress quiz =
         numTotal =
             List.length quiz.neighborsLeft + numCompleted
     in
-    div []
+    div [ class "neighborsProgress" ]
         [ text
-            ("( "
+            ("("
                 ++ String.fromInt numCompleted
                 ++ " / "
                 ++ String.fromInt numTotal
-                ++ " ) "
+                ++ ") "
                 ++ countryIdsToNames quiz.neighborsGuessed
             )
         ]
@@ -371,7 +375,7 @@ viewOverallProgress quiz =
         numTotal =
             List.length quiz.nextCountries + 1 + numCompleted
     in
-    div []
+    div [ class "overallProgress" ]
         [ text
             ("Overall progress: "
                 ++ String.fromInt numCompleted
@@ -383,10 +387,10 @@ viewOverallProgress quiz =
 
 viewMenu : Html Msg
 viewMenu =
-    div []
-        [ button [ onClick Restart ] [ text "Restart" ]
-        , select [ onInput SetSelectedCountrySet ]
+    div [ class "menu" ]
+        [ select [ onInput SetSelectedCountrySet ]
             viewCountrySetOptions
+        , button [ onClick Restart ] [ text "Restart" ]
         ]
 
 

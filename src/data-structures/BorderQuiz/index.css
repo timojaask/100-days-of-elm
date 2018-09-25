@@ -1,0 +1,55 @@
+:root {
+    --default-text-color: #4cead4;
+    --special-text-color: #ff6484;
+}
+
+body {
+    text-align: center;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', Geneva, Verdana, sans-serif;
+    color: var(--default-text-color);
+}
+
+.question {
+    font-size: 18px;
+}
+
+.cheat {
+    font-size: 10px;
+    color: lightgray;
+}
+
+.answerForm input {
+    min-height: 20px;
+    font-size: 14px;
+    margin-top: 10px;
+    text-transform: uppercase;
+    border: 3px solid var(--default-text-color);
+    outline: none;
+}
+
+.neighborsProgress {
+    font-size: 14px;
+    color: var(--special-text-color);
+}
+
+.overallProgress {
+    margin-top: 15px;
+}
+
+.menu {
+    margin-top: 20px;
+}
+
+.menu button {
+    background-color: var(--default-text-color);
+    color: #ffffff;
+    border: none;
+    padding: 10px;
+}
+
+.menu button:hover {
+    background-color: var(--default-text-color);
+    color: #ffffff;
+    border: none;
+    padding: 10px;
+}
