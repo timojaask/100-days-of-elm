@@ -39,4 +39,5 @@ Progress and learning notes for each day:
 * [Day 36: Preparing Border Quiz to use shuffle](./day-36.md)
 * [Day 37: Elm arcitecture in iOS & Swift](./day-37.md)
 * [Day 38: Elm workshop, compiling, external CSS](./day-38.md)
-* [Day 39: Elm workshop](./day-39.md)
+* [Day 39: Elm workshop, custom types, variants, variants as functions, type variables](./day-39.md)
+* [Day 40: Elm workshop, JSON decoding, HTTP POST request](./day-40.md)
