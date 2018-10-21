@@ -125,6 +125,12 @@ countryIdsToNames idList =
 
 Not pretty. Good thing about this implementation is that we iterate over the list of IDs only once. However, if we're willing to forego some performance for the sake of readability, we could use one of the following options:
 
+```
+countryIdsToNames : List Int -> String
+countryIdsToNames =
+    String.concat (List.intersperse ", " (List.map countryFirstNameById))
+```
+
 Using the `>>` function composition:
 
 ```

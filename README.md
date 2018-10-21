@@ -42,3 +42,4 @@ Progress and learning notes for each day:
 * [Day 39: Elm workshop, custom types, variants, variants as functions, type variables](./day-39.md)
 * [Day 40: Elm workshop, JSON decoding, HTTP POST request](./day-40.md)
 * [Day 41: Elm workshop, opaque types, extensible data and types](./day-41.md)
+* [Day 42: Elm workshop, narrowing types, enforcement types](./day-42.md)
