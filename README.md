@@ -44,3 +44,4 @@ Progress and learning notes for each day:
 * [Day 41: Elm workshop, opaque types, extensible data and types](./day-41.md)
 * [Day 42: Elm workshop, narrowing types, enforcement types](./day-42.md)
 * [Day 43: Elm workshop, narrowing types, enforcement types, modules for modularity](./day-43.md)
+* [Day 44: Elm workshop, helper functions, similar vs same, reusing view functions](./day-44.md)
