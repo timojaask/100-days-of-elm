@@ -1,0 +1,41 @@
+.board {
+  display: flex;
+}
+
+.boardColumn {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #ccc;
+}
+
+.boardRow {
+  display: flex;
+}
+
+.boardCell {
+  display: flex;
+  min-width: 30px;
+  min-height: 30px;
+  margin: 0;
+  border: 1px solid #ccc;
+  align-items: center;
+  justify-content: center;
+}
+
+.boardCell--empty {
+  background-color: #fff;
+}
+
+.boardCell--value {
+  background-color: #ddd;
+}
+
+.boardCell span {
+  font-weight: bold;
+}
+
+.controls button {
+  width: 30px;
+  height: 30px;
+  margin: 5px;
+}

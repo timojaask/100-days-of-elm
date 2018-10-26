@@ -47,3 +47,4 @@ Progress and learning notes for each day:
 * [Day 44: Elm workshop, helper functions, similar vs same, reusing view functions](./day-44.md)
 * [Day 45: Elm workshop, sources of truth](./day-45.md)
 * [Day 46: Elm workshop, JSON decode using pipeline](./day-46.md)
+* [Day 47: 2048](./day-47.md)
