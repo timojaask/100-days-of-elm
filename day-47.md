@@ -22,3 +22,7 @@ The parameter for that would be:
 ```
 128_64_8_4-64-8_2_0-2-2_0_0-4-0_0_0
 ```
+
+For this to work I need I can parse the URL either in JavaScript in Elm directly. Since I'm learning Elm, might as well do the latter. So I'll use `Browser.application` to be able to work with URLs in the app. Now I have access to the current URL of the app and also on URL changed event.
+
+Next time I'll try and implement parsing the URL and initializing a board based on the parsed value.

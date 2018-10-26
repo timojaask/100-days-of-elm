@@ -2,47 +2,29 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser exposing (Document)
+import Browser.Navigation as Nav
 import Debug
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Random
+import Url
 
 
 main =
-    Browser.document
-        -- { init = testModel
-        { init = initialModel
+    Browser.application
+        { init = init
         , update = update
         , subscriptions = subscriptions
         , view = view
+        , onUrlChange = UrlChanged
+        , onUrlRequest = LinkClicked
         }
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
-
-
-boardIndices : List ( Int, Int )
-boardIndices =
-    [ ( 0, 0 )
-    , ( 1, 0 )
-    , ( 2, 0 )
-    , ( 3, 0 )
-    , ( 0, 1 )
-    , ( 1, 1 )
-    , ( 2, 1 )
-    , ( 3, 1 )
-    , ( 0, 2 )
-    , ( 1, 2 )
-    , ( 2, 2 )
-    , ( 3, 2 )
-    , ( 0, 3 )
-    , ( 1, 3 )
-    , ( 2, 3 )
-    , ( 3, 3 )
-    ]
 
 
 type alias Cell =
@@ -54,9 +36,23 @@ type alias Cell =
 
 emptyBoard : List Cell
 emptyBoard =
-    List.map
-        (\( row, col ) -> Cell row col 0)
-        boardIndices
+    [ Cell 0 0 0
+    , Cell 1 0 0
+    , Cell 2 0 0
+    , Cell 3 0 0
+    , Cell 0 1 0
+    , Cell 1 1 0
+    , Cell 2 1 0
+    , Cell 3 1 0
+    , Cell 0 2 0
+    , Cell 1 2 0
+    , Cell 2 2 0
+    , Cell 3 2 0
+    , Cell 0 3 0
+    , Cell 1 3 0
+    , Cell 2 3 0
+    , Cell 3 3 0
+    ]
 
 
 emptyCells : List Cell -> List Cell
@@ -412,58 +408,30 @@ insertNewValue board emptyCellIndex =
 
 type alias Model =
     { board : List Cell
+    , key : Nav.Key
+    , url : Url.Url
     }
 
 
-testBoard : List Cell
-testBoard =
-    -- row 0
-    [ Cell 0 0 2
-    , Cell 0 1 2
-    , Cell 0 2 4
-    , Cell 0 3 0
-
-    -- row 1
-    , Cell 1 0 0
-    , Cell 1 1 0
-    , Cell 1 2 0
-    , Cell 1 3 0
-
-    -- row 2
-    , Cell 2 0 0
-    , Cell 2 1 0
-    , Cell 2 2 0
-    , Cell 2 3 0
-
-    -- row 3
-    , Cell 3 0 0
-    , Cell 3 1 0
-    , Cell 3 2 0
-    , Cell 3 3 0
-    ]
-
-
-testModel : () -> ( Model, Cmd Msg )
-testModel _ =
-    ( Model testBoard, Cmd.none )
-
-
-initialModel : () -> ( Model, Cmd Msg )
-initialModel _ =
-    ( Model emptyBoard, generateEmptyCellIndex emptyBoard )
+init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
+init flags url key =
+    -- OR ( Model testBoard, Cmd.none ) -- or whatever comes from the URL
+    ( Model emptyBoard key url, generateEmptyCellIndex emptyBoard )
 
 
 type Msg
     = Move Direction
     | NewGame
     | RandomCell Int
+    | LinkClicked Browser.UrlRequest
+    | UrlChanged Url.Url
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewGame ->
-            ( Model emptyBoard, generateEmptyCellIndex model.board )
+            ( { model | board = emptyBoard }, generateEmptyCellIndex model.board )
 
         Move direction ->
             move model direction
@@ -474,6 +442,19 @@ update msg model =
                     insertNewValue model.board emptyCellIndex
             in
             ( { model | board = newBoard }, Cmd.none )
+
+        LinkClicked urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        UrlChanged url ->
+            ( { model | url = url }
+            , Cmd.none
+            )
 
 
 generateEmptyCellIndex : List Cell -> Cmd Msg
@@ -498,7 +479,8 @@ view : Model -> Document Msg
 view model =
     { title = "2048"
     , body =
-        [ viewBoard model.board
+        [ button [ onClick NewGame ] [ text "New game" ]
+        , viewBoard model.board
         , viewControls
         ]
     }
