@@ -9,6 +9,8 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Random
 import Url
+import Url.Parser
+import Url.Parser.Query
 
 
 main =
@@ -37,20 +39,20 @@ type alias Cell =
 emptyBoard : List Cell
 emptyBoard =
     [ Cell 0 0 0
-    , Cell 1 0 0
-    , Cell 2 0 0
-    , Cell 3 0 0
     , Cell 0 1 0
-    , Cell 1 1 0
-    , Cell 2 1 0
-    , Cell 3 1 0
     , Cell 0 2 0
-    , Cell 1 2 0
-    , Cell 2 2 0
-    , Cell 3 2 0
     , Cell 0 3 0
+    , Cell 1 0 0
+    , Cell 1 1 0
+    , Cell 1 2 0
     , Cell 1 3 0
+    , Cell 2 0 0
+    , Cell 2 1 0
+    , Cell 2 2 0
     , Cell 2 3 0
+    , Cell 3 0 0
+    , Cell 3 1 0
+    , Cell 3 2 0
     , Cell 3 3 0
     ]
 
@@ -129,7 +131,7 @@ move model direction =
                 Cmd.none
 
             else
-                generateEmptyCellIndex model.board
+                findRandomEmptyCellCmd model.board
     in
     ( { model | board = newBoard }, cmd )
 
@@ -186,7 +188,7 @@ gatherCellsDownInColumn columnIndex board =
             getColumn columnIndex board
 
         columnValuesGatheredBottomToTop =
-            List.reverse (gatherValuesInLine column)
+            List.reverse (gatherValuesInLine (List.reverse column))
     in
     applyValuesToColumn columnValuesGatheredBottomToTop columnIndex board
 
@@ -210,7 +212,7 @@ gatherCellsRightInRow rowIndex board =
             getRow rowIndex board
 
         rowValuesGatheredRightToLeft =
-            List.reverse (gatherValuesInLine row)
+            List.reverse (gatherValuesInLine (List.reverse row))
     in
     applyValuesToRow rowValuesGatheredRightToLeft rowIndex board
 
@@ -359,7 +361,7 @@ joinCellsIfSame fromRow fromCol toRow toCol board =
     in
     case ( maybeFromCell, maybeToCell ) of
         ( Just fromCell, Just toCell ) ->
-            if fromCell.value == toCell.value then
+            if fromCell.value == toCell.value && fromCell.value /= 0 then
                 setCellValue toCell.row toCell.col (toCell.value + fromCell.value) board
                     |> setCellValue fromCell.row fromCell.col 0
 
@@ -415,8 +417,110 @@ type alias Model =
 
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
-    -- OR ( Model testBoard, Cmd.none ) -- or whatever comes from the URL
-    ( Model emptyBoard key url, generateEmptyCellIndex emptyBoard )
+    let
+        maybeBoard =
+            boardFromUrl url
+    in
+    case maybeBoard of
+        Nothing ->
+            -- No valid board in URL, start a new game with empty board, and add a number at random cell
+            ( Model emptyBoard key url, findRandomEmptyCellCmd emptyBoard )
+
+        Just board ->
+            -- Load board from URL, and do nothing (no adding random cell)
+            ( Model board key url, Cmd.none )
+
+
+boardUrlParser : Url.Parser.Parser (Maybe String -> a) a
+boardUrlParser =
+    Url.Parser.query (Url.Parser.Query.string "board")
+
+
+flattenMaybe : Maybe (Maybe a) -> Maybe a
+flattenMaybe maybe =
+    case maybe of
+        Nothing ->
+            Nothing
+
+        Just some ->
+            some
+
+
+intRowFromString : String -> Maybe (List Int)
+intRowFromString string =
+    List.foldl
+        (\strCellValue ->
+            \maybeRowResult_ ->
+                case maybeRowResult_ of
+                    Nothing ->
+                        Nothing
+
+                    Just rowResult ->
+                        case String.toInt strCellValue of
+                            Nothing ->
+                                Nothing
+
+                            Just intValue ->
+                                Just (List.append rowResult [ intValue ])
+        )
+        (Just [])
+        (String.split "_" string)
+
+
+listOfMaybesToMaybeList : List (Maybe a) -> Maybe (List a)
+listOfMaybesToMaybeList listOfMaybes =
+    List.foldl
+        (\maybeItem ->
+            \maybeResultList ->
+                case ( maybeItem, maybeResultList ) of
+                    ( Just item, Just resultList ) ->
+                        Just (List.append resultList [ item ])
+
+                    ( _, _ ) ->
+                        Nothing
+        )
+        (Just [])
+        listOfMaybes
+
+
+boardFromString : String -> Maybe (List Cell)
+boardFromString string =
+    let
+        result =
+            listOfMaybesToMaybeList (List.map String.toInt (String.split "_" string))
+    in
+    case result of
+        Nothing ->
+            Nothing
+
+        Just listOfIntValues ->
+            if List.length emptyBoard == List.length listOfIntValues then
+                Just
+                    (List.map2
+                        (\cell ->
+                            \value ->
+                                { cell | value = value }
+                        )
+                        emptyBoard
+                        listOfIntValues
+                    )
+
+            else
+                Nothing
+
+
+boardFromUrl : Url.Url -> Maybe (List Cell)
+boardFromUrl url =
+    let
+        maybeBoardString =
+            flattenMaybe (Url.Parser.parse boardUrlParser url)
+    in
+    case maybeBoardString of
+        Nothing ->
+            Nothing
+
+        Just boardString ->
+            boardFromString boardString
 
 
 type Msg
@@ -431,7 +535,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewGame ->
-            ( { model | board = emptyBoard }, generateEmptyCellIndex model.board )
+            ( { model | board = emptyBoard }, findRandomEmptyCellCmd model.board )
 
         Move direction ->
             move model direction
@@ -457,8 +561,8 @@ update msg model =
             )
 
 
-generateEmptyCellIndex : List Cell -> Cmd Msg
-generateEmptyCellIndex board =
+findRandomEmptyCellCmd : List Cell -> Cmd Msg
+findRandomEmptyCellCmd board =
     let
         numEmptyCells =
             List.length (emptyCells board)

@@ -4,3 +4,5 @@
 xcuserdata
 /src/data-structures/BorderQuiz/main.js
 /src/game-2048/elm-stuff
+/src/game-2048/node_modules
+/src/game-2048/public/index.js

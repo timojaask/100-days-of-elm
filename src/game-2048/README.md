@@ -1,22 +1,46 @@
-## Compile:
+## Development environment setup
 
 ```
-elm make src/Main.elm --output=./public/elm.js
+yarn install
 ```
 
-## Run:
+## Building
 
-1. Install `http-server` if not yet installed
-
-```
-npm install http-server -g
-```
-
-2. Open `/public/` directory and run the server
+**For development:**
 
 ```
-cd public
-http-server
+yarn build-dev
 ```
 
-3. Open your browser and navigate to `http://localhost:8080`
+**For production:**
+
+```
+yarn build
+```
+
+## Running locally
+
+```
+yarn build-dev
+yarn start
+```
+
+Open in your browser of choice using one of the links provided by the last command.
+
+## Deploying
+
+Build command:
+
+```
+yarn build
+```
+
+Deploy folder:
+
+```
+public
+```
+
+## Git
+
+The `public` folder should be committed to git. However, `public/index.js` can be git-ignored, because it's built by `yarn build`.
