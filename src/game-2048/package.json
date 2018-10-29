@@ -6,11 +6,15 @@
   "scripts": {
     "build": "elm make --optimize src/Main.elm --output=public/index.js",
     "build-dev": "elm make src/Main.elm --output=public/index.js",
-    "start": "http-server public -c-1"
+    "start": "http-server public -c-1",
+    "test-dev": "cypress open",
+    "test": "yarn start & wait-on http://localhost:8080 && cypress run"
   },
   "dependencies": {},
   "devDependencies": {
+    "cypress": "^3.1.0",
     "elm": "^0.19.0-bugfix2",
-    "http-server": "^0.11.1"
+    "http-server": "^0.11.1",
+    "wait-on": "^3.1.0"
   }
 }

@@ -375,6 +375,7 @@ joinCellsIfSame fromRow fromCol toRow toCol board =
 insertNewValue : List Cell -> Int -> List Cell
 insertNewValue board emptyCellIndex =
     let
+        -- TODO: Make this random -- either 2 or 4
         newValue =
             2
 
@@ -483,13 +484,59 @@ listOfMaybesToMaybeList listOfMaybes =
         listOfMaybes
 
 
+isValidValue : Int -> Bool
+isValidValue v =
+    v
+        == 0
+        || v
+        == 2
+        || v
+        == 4
+        || v
+        == 8
+        || v
+        == 16
+        || v
+        == 32
+        || v
+        == 64
+        || v
+        == 128
+        || v
+        == 256
+        || v
+        == 512
+        || v
+        == 1024
+        || v
+        == 2048
+
+
 boardFromString : String -> Maybe (List Cell)
 boardFromString string =
     let
-        result =
-            listOfMaybesToMaybeList (List.map String.toInt (String.split "_" string))
+        listOfMaybeInt =
+            List.map String.toInt (String.split "_" string)
+
+        maybeListOfValidValues =
+            listOfMaybesToMaybeList
+                (List.map
+                    (\maybeInt ->
+                        case maybeInt of
+                            Nothing ->
+                                Nothing
+
+                            Just int ->
+                                if isValidValue int then
+                                    Just int
+
+                                else
+                                    Nothing
+                    )
+                    listOfMaybeInt
+                )
     in
-    case result of
+    case maybeListOfValidValues of
         Nothing ->
             Nothing
 
@@ -593,23 +640,20 @@ view model =
 viewControls : Html Msg
 viewControls =
     div [ class "controls" ]
-        [ button [ onClick (Move Left) ] [ text "<" ]
-        , button [ onClick (Move Up) ] [ text "^" ]
-        , button [ onClick (Move Down) ] [ text "v" ]
-        , button [ onClick (Move Right) ] [ text ">" ]
+        [ button [ class "buttonLeft", onClick (Move Left) ] [ text "<" ]
+        , button [ class "buttonUp", onClick (Move Up) ] [ text "^" ]
+        , button [ class "buttonDown", onClick (Move Down) ] [ text "v" ]
+        , button [ class "buttonRight", onClick (Move Right) ] [ text ">" ]
         ]
 
 
 viewBoard : List Cell -> Html Msg
 viewBoard board =
     div [ class "board" ]
-        [ div
-            [ class "boardColumn" ]
-            [ viewBoardRow 0 board
-            , viewBoardRow 1 board
-            , viewBoardRow 2 board
-            , viewBoardRow 3 board
-            ]
+        [ viewBoardRow 0 board
+        , viewBoardRow 1 board
+        , viewBoardRow 2 board
+        , viewBoardRow 3 board
         ]
 
 

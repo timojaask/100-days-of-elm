@@ -1,11 +1,14 @@
-.board {
+body {
   display: flex;
+  flex-direction: column;
+  align-items: flex-start;
 }
 
-.boardColumn {
+.board {
   display: flex;
   flex-direction: column;
   border: 1px solid #ccc;
+
 }
 
 .boardRow {
@@ -14,8 +17,8 @@
 
 .boardCell {
   display: flex;
-  min-width: 30px;
-  min-height: 30px;
+  min-width: 38px;
+  min-height: 38px;
   margin: 0;
   border: 1px solid #ccc;
   align-items: center;
@@ -32,6 +35,7 @@
 
 .boardCell span {
   font-weight: bold;
+  font-size: 14px;
 }
 
 .controls button {
