@@ -98,123 +98,132 @@ type Direction
     | Right
 
 
-move : Model -> Direction -> ( Model, Cmd Msg )
-move model direction =
+boardContains2048 : List Cell -> Bool
+boardContains2048 =
+    List.any
+        (\cell -> cell.value == 2048)
+
+
+boardContainsEmptyCells : List Cell -> Bool
+boardContainsEmptyCells =
+    List.any
+        (\cell -> cell.value == 0)
+
+
+canMove : List Cell -> Direction -> Bool
+canMove board direction =
+    let
+        boardAfterMove =
+            move direction board
+    in
+    board /= boardAfterMove
+
+
+canMoveAnywhere : List Cell -> Bool
+canMoveAnywhere board =
+    let
+        canMoveResults =
+            List.map (canMove board) [ Left, Right, Up, Down ]
+    in
+    List.any (\bool -> bool == True) canMoveResults
+
+
+getGameState : List Cell -> GameState
+getGameState board =
+    if boardContains2048 board then
+        Won
+
+    else if canMoveAnywhere board then
+        Playing
+
+    else
+        Lost
+
+
+updateWithMove : Model -> Direction -> ( Model, Cmd Msg )
+updateWithMove model direction =
+    case model.boardState of
+        Loading ->
+            ( model, Cmd.none )
+
+        Loaded board ->
+            -- 1. gather all pieces up as much as possible, to remove empty spaces
+            -- 2. join any joinable pieces up
+            -- 3. gather all pieces up as much as possible, to remove empty spaces
+            let
+                newBoard =
+                    move direction board
+
+                cmd =
+                    if newBoard == board || getGameState newBoard /= Playing then
+                        Cmd.none
+
+                    else
+                        findRandomEmptyCellCmd board
+            in
+            ( { model | boardState = Loaded newBoard }, cmd )
+
+
+move : Direction -> List Cell -> List Cell
+move direction board =
     -- 1. gather all pieces up as much as possible, to remove empty spaces
     -- 2. join any joinable pieces up
     -- 3. gather all pieces up as much as possible, to remove empty spaces
-    let
-        newBoard =
-            case direction of
-                Up ->
-                    gatherCellsUp model.board
-                        |> joinUp
-                        |> gatherCellsUp
-
-                Down ->
-                    gatherCellsDown model.board
-                        |> joinDown
-                        |> gatherCellsDown
-
-                Left ->
-                    gatherCellsLeft model.board
-                        |> joinLeft
-                        |> gatherCellsLeft
-
-                Right ->
-                    gatherCellsRight model.board
-                        |> joinRight
-                        |> gatherCellsRight
-
-        cmd =
-            if newBoard == model.board then
-                Cmd.none
-
-            else
-                findRandomEmptyCellCmd model.board
-    in
-    ( { model | board = newBoard }, cmd )
+    gatherCells direction board
+        |> joinCells direction
+        |> gatherCells direction
 
 
-gatherCellsUp : List Cell -> List Cell
-gatherCellsUp =
-    -- Gather all pieces up as much as possible, to remove empty spaces
-    gatherCellsUpInColumn 0
-        >> gatherCellsUpInColumn 1
-        >> gatherCellsUpInColumn 2
-        >> gatherCellsUpInColumn 3
+gatherCells : Direction -> List Cell -> List Cell
+gatherCells direction board =
+    gatherCellsOnOneLine direction 0 board
+        |> gatherCellsOnOneLine direction 1
+        |> gatherCellsOnOneLine direction 2
+        |> gatherCellsOnOneLine direction 3
 
 
-gatherCellsDown : List Cell -> List Cell
-gatherCellsDown =
-    gatherCellsDownInColumn 0
-        >> gatherCellsDownInColumn 1
-        >> gatherCellsDownInColumn 2
-        >> gatherCellsDownInColumn 3
+gatherCellsOnOneLine : Direction -> Int -> List Cell -> List Cell
+gatherCellsOnOneLine direction rowOrColIdx board =
+    case direction of
+        Up ->
+            let
+                column =
+                    getColumn rowOrColIdx board
 
+                columnValuesGatheredTopToBottom =
+                    gatherValuesInLine column
+            in
+            applyValuesToColumn columnValuesGatheredTopToBottom rowOrColIdx board
 
-gatherCellsLeft : List Cell -> List Cell
-gatherCellsLeft =
-    gatherCellsLeftInRow 0
-        >> gatherCellsLeftInRow 1
-        >> gatherCellsLeftInRow 2
-        >> gatherCellsLeftInRow 3
+        Down ->
+            let
+                column =
+                    getColumn rowOrColIdx board
 
+                columnValuesGatheredBottomToTop =
+                    List.reverse (gatherValuesInLine (List.reverse column))
+            in
+            applyValuesToColumn columnValuesGatheredBottomToTop rowOrColIdx board
 
-gatherCellsRight : List Cell -> List Cell
-gatherCellsRight =
-    gatherCellsRightInRow 0
-        >> gatherCellsRightInRow 1
-        >> gatherCellsRightInRow 2
-        >> gatherCellsRightInRow 3
+        Left ->
+            let
+                row =
+                    getRow rowOrColIdx board
 
+                rowValuesGatheredLeftToRight =
+                    gatherValuesInLine row
+            in
+            applyValuesToRow rowValuesGatheredLeftToRight rowOrColIdx board
 
-gatherCellsUpInColumn : Int -> List Cell -> List Cell
-gatherCellsUpInColumn columnIndex board =
-    let
-        column =
-            getColumn columnIndex board
+        Right ->
+            let
+                row =
+                    getRow rowOrColIdx board
 
-        columnValuesGatheredTopToBottom =
-            gatherValuesInLine column
-    in
-    applyValuesToColumn columnValuesGatheredTopToBottom columnIndex board
-
-
-gatherCellsDownInColumn : Int -> List Cell -> List Cell
-gatherCellsDownInColumn columnIndex board =
-    let
-        column =
-            getColumn columnIndex board
-
-        columnValuesGatheredBottomToTop =
-            List.reverse (gatherValuesInLine (List.reverse column))
-    in
-    applyValuesToColumn columnValuesGatheredBottomToTop columnIndex board
-
-
-gatherCellsLeftInRow : Int -> List Cell -> List Cell
-gatherCellsLeftInRow rowIndex board =
-    let
-        row =
-            getRow rowIndex board
-
-        rowValuesGatheredLeftToRight =
-            gatherValuesInLine row
-    in
-    applyValuesToRow rowValuesGatheredLeftToRight rowIndex board
-
-
-gatherCellsRightInRow : Int -> List Cell -> List Cell
-gatherCellsRightInRow rowIndex board =
-    let
-        row =
-            getRow rowIndex board
-
-        rowValuesGatheredRightToLeft =
-            List.reverse (gatherValuesInLine (List.reverse row))
-    in
-    applyValuesToRow rowValuesGatheredRightToLeft rowIndex board
+                rowValuesGatheredRightToLeft =
+                    List.reverse (gatherValuesInLine (List.reverse row))
+            in
+            applyValuesToRow rowValuesGatheredRightToLeft rowOrColIdx board
 
 
 applyValuesToColumn : List Int -> Int -> List Cell -> List Cell
@@ -281,64 +290,36 @@ gatherValuesInLine lineOfCells =
             nonEmptyValues
 
 
-joinUp : List Cell -> List Cell
-joinUp =
-    joinUpColumn 0
-        >> joinUpColumn 1
-        >> joinUpColumn 2
-        >> joinUpColumn 3
+joinCells : Direction -> List Cell -> List Cell
+joinCells direction board =
+    joinCellsOnLine direction 0 board
+        |> joinCellsOnLine direction 1
+        |> joinCellsOnLine direction 2
+        |> joinCellsOnLine direction 3
 
 
-joinDown : List Cell -> List Cell
-joinDown =
-    joinDownColumn 0
-        >> joinDownColumn 1
-        >> joinDownColumn 2
-        >> joinDownColumn 3
+joinCellsOnLine : Direction -> Int -> List Cell -> List Cell
+joinCellsOnLine direction rowOrColIdx board =
+    case direction of
+        Up ->
+            joinCellsIfSame 1 rowOrColIdx 0 rowOrColIdx board
+                |> joinCellsIfSame 2 rowOrColIdx 1 rowOrColIdx
+                |> joinCellsIfSame 3 rowOrColIdx 2 rowOrColIdx
 
+        Down ->
+            joinCellsIfSame 2 rowOrColIdx 3 rowOrColIdx board
+                |> joinCellsIfSame 1 rowOrColIdx 2 rowOrColIdx
+                |> joinCellsIfSame 0 rowOrColIdx 1 rowOrColIdx
 
-joinLeft : List Cell -> List Cell
-joinLeft =
-    joinLeftRow 0
-        >> joinLeftRow 1
-        >> joinLeftRow 2
-        >> joinLeftRow 3
+        Left ->
+            joinCellsIfSame rowOrColIdx 1 rowOrColIdx 0 board
+                |> joinCellsIfSame rowOrColIdx 2 rowOrColIdx 1
+                |> joinCellsIfSame rowOrColIdx 3 rowOrColIdx 2
 
-
-joinRight : List Cell -> List Cell
-joinRight =
-    joinRightRow 0
-        >> joinRightRow 1
-        >> joinRightRow 2
-        >> joinRightRow 3
-
-
-joinUpColumn : Int -> List Cell -> List Cell
-joinUpColumn columnIndex board =
-    joinCellsIfSame 1 columnIndex 0 columnIndex board
-        |> joinCellsIfSame 2 columnIndex 1 columnIndex
-        |> joinCellsIfSame 3 columnIndex 2 columnIndex
-
-
-joinDownColumn : Int -> List Cell -> List Cell
-joinDownColumn columnIndex board =
-    joinCellsIfSame 2 columnIndex 3 columnIndex board
-        |> joinCellsIfSame 1 columnIndex 2 columnIndex
-        |> joinCellsIfSame 0 columnIndex 1 columnIndex
-
-
-joinLeftRow : Int -> List Cell -> List Cell
-joinLeftRow rowIndex board =
-    joinCellsIfSame rowIndex 1 rowIndex 0 board
-        |> joinCellsIfSame rowIndex 2 rowIndex 1
-        |> joinCellsIfSame rowIndex 3 rowIndex 2
-
-
-joinRightRow : Int -> List Cell -> List Cell
-joinRightRow rowIndex board =
-    joinCellsIfSame rowIndex 2 rowIndex 3 board
-        |> joinCellsIfSame rowIndex 1 rowIndex 2
-        |> joinCellsIfSame rowIndex 0 rowIndex 1
+        Right ->
+            joinCellsIfSame rowOrColIdx 2 rowOrColIdx 3 board
+                |> joinCellsIfSame rowOrColIdx 1 rowOrColIdx 2
+                |> joinCellsIfSame rowOrColIdx 0 rowOrColIdx 1
 
 
 getCell : Int -> Int -> List Cell -> Maybe Cell
@@ -409,8 +390,19 @@ insertNewValue board emptyCellIndex =
             setCellValue cell.row cell.col newValue board
 
 
+type GameState
+    = Playing
+    | Won
+    | Lost
+
+
+type BoardState
+    = Loading
+    | Loaded (List Cell)
+
+
 type alias Model =
-    { board : List Cell
+    { boardState : BoardState
     , key : Nav.Key
     , url : Url.Url
     }
@@ -425,11 +417,11 @@ init flags url key =
     case maybeBoard of
         Nothing ->
             -- No valid board in URL, start a new game with empty board, and add a number at random cell
-            ( Model emptyBoard key url, findRandomEmptyCellCmd emptyBoard )
+            ( Model Loading key url, findRandomEmptyCellCmd emptyBoard )
 
         Just board ->
             -- Load board from URL, and do nothing (no adding random cell)
-            ( Model board key url, Cmd.none )
+            ( Model (Loaded board) key url, Cmd.none )
 
 
 boardUrlParser : Url.Parser.Parser (Maybe String -> a) a
@@ -582,17 +574,29 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewGame ->
-            ( { model | board = emptyBoard }, findRandomEmptyCellCmd model.board )
+            let
+                newBoard =
+                    emptyBoard
+            in
+            ( { model | boardState = Loaded newBoard }, findRandomEmptyCellCmd newBoard )
 
         Move direction ->
-            move model direction
+            updateWithMove model direction
 
         RandomCell emptyCellIndex ->
             let
+                board =
+                    case model.boardState of
+                        Loading ->
+                            emptyBoard
+
+                        Loaded board_ ->
+                            board_
+
                 newBoard =
-                    insertNewValue model.board emptyCellIndex
+                    insertNewValue board emptyCellIndex
             in
-            ( { model | board = newBoard }, Cmd.none )
+            ( { model | boardState = Loaded newBoard }, Cmd.none )
 
         LinkClicked urlRequest ->
             case urlRequest of
@@ -628,23 +632,70 @@ findRandomEmptyCellCmd board =
 
 view : Model -> Document Msg
 view model =
+    let
+        board =
+            case model.boardState of
+                Loading ->
+                    emptyBoard
+
+                Loaded board_ ->
+                    board_
+
+        gameState =
+            getGameState board
+
+        isPlaying =
+            gameState == Playing
+    in
     { title = "2048"
     , body =
         [ button [ onClick NewGame ] [ text "New game" ]
-        , viewBoard model.board
-        , viewControls
+        , viewBoard board
+        , viewControls model.boardState
+        , viewMessage model.boardState
         ]
     }
 
 
-viewControls : Html Msg
-viewControls =
-    div [ class "controls" ]
-        [ button [ class "buttonLeft", onClick (Move Left) ] [ text "<" ]
-        , button [ class "buttonUp", onClick (Move Up) ] [ text "^" ]
-        , button [ class "buttonDown", onClick (Move Down) ] [ text "v" ]
-        , button [ class "buttonRight", onClick (Move Right) ] [ text ">" ]
-        ]
+viewMessage : BoardState -> Html Msg
+viewMessage boardState =
+    case boardState of
+        Loading ->
+            text ""
+
+        Loaded board ->
+            case getGameState board of
+                Won ->
+                    span [ class "wonMessage" ] [ text "Congratulations, you won!" ]
+
+                Lost ->
+                    span [ class "lostMessage" ] [ text "Game over, there are no possible moves remaining." ]
+
+                Playing ->
+                    text ""
+
+
+viewControls : BoardState -> Html Msg
+viewControls boardState =
+    case boardState of
+        Loading ->
+            text ""
+
+        Loaded board ->
+            case getGameState board of
+                Won ->
+                    text ""
+
+                Lost ->
+                    text ""
+
+                Playing ->
+                    div [ class "controls" ]
+                        [ button [ class "buttonLeft", onClick (Move Left) ] [ text "<" ]
+                        , button [ class "buttonUp", onClick (Move Up) ] [ text "^" ]
+                        , button [ class "buttonDown", onClick (Move Down) ] [ text "v" ]
+                        , button [ class "buttonRight", onClick (Move Right) ] [ text ">" ]
+                        ]
 
 
 viewBoard : List Cell -> Html Msg
