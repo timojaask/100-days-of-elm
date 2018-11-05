@@ -2,12 +2,16 @@ module Main exposing (main)
 
 import Array exposing (Array)
 import Browser exposing (Document)
+import Browser.Dom
+import Browser.Events
 import Browser.Navigation as Nav
 import Debug
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import Json.Decode as Decode
 import Random
+import Task
 import Url
 import Url.Parser
 import Url.Parser.Query
@@ -26,7 +30,36 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.none
+    case model.boardState of
+        Loading ->
+            Sub.none
+
+        Loaded _ ->
+            Browser.Events.onKeyDown keyDownDecoder
+
+
+keyDownDecoder : Decode.Decoder Msg
+keyDownDecoder =
+    Decode.map keyToDirection (Decode.field "key" Decode.string)
+
+
+keyToDirection : String -> Msg
+keyToDirection key =
+    case key of
+        "ArrowLeft" ->
+            OnKeyPressed (Just Left)
+
+        "ArrowRight" ->
+            OnKeyPressed (Just Right)
+
+        "ArrowUp" ->
+            OnKeyPressed (Just Up)
+
+        "ArrowDown" ->
+            OnKeyPressed (Just Down)
+
+        _ ->
+            OnKeyPressed Nothing
 
 
 type alias Cell =
@@ -55,6 +88,15 @@ emptyBoard =
     , Cell 3 2 0
     , Cell 3 3 0
     ]
+
+
+validValues =
+    [ 0, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048 ]
+
+
+isValidValue : Int -> Bool
+isValidValue v =
+    List.any ((==) v) validValues
 
 
 emptyCells : List Cell -> List Cell
@@ -125,7 +167,7 @@ canMoveAnywhere board =
         canMoveResults =
             List.map (canMove board) [ Left, Right, Up, Down ]
     in
-    List.any (\bool -> bool == True) canMoveResults
+    List.any ((==) True) canMoveResults
 
 
 getGameState : List Cell -> GameState
@@ -159,7 +201,7 @@ updateWithMove model direction =
                         Cmd.none
 
                     else
-                        findRandomEmptyCellCmd board
+                        findRandomEmptyCellCmd newBoard
             in
             ( { model | boardState = Loaded newBoard }, cmd )
 
@@ -408,6 +450,12 @@ type alias Model =
     }
 
 
+focusOnNewGameButton : Cmd Msg
+focusOnNewGameButton =
+    -- It looks like we need to focus on something before keyboard events will start propagating
+    Task.attempt (\_ -> NoOp) (Browser.Dom.focus "board")
+
+
 init : () -> Url.Url -> Nav.Key -> ( Model, Cmd Msg )
 init flags url key =
     let
@@ -417,11 +465,21 @@ init flags url key =
     case maybeBoard of
         Nothing ->
             -- No valid board in URL, start a new game with empty board, and add a number at random cell
-            ( Model Loading key url, findRandomEmptyCellCmd emptyBoard )
+            let
+                cmd =
+                    Cmd.batch
+                        [ findRandomEmptyCellCmd emptyBoard
+                        , focusOnNewGameButton
+                        ]
+            in
+            ( Model Loading key url, cmd )
 
         Just board ->
             -- Load board from URL, and do nothing (no adding random cell)
-            ( Model (Loaded board) key url, Cmd.none )
+            ( Model (Loaded board) key url, focusOnNewGameButton )
+
+initGame : Url.Url -> (BoardState, Cmd Msg)
+initGame url =
 
 
 boardUrlParser : Url.Parser.Parser (Maybe String -> a) a
@@ -474,34 +532,6 @@ listOfMaybesToMaybeList listOfMaybes =
         )
         (Just [])
         listOfMaybes
-
-
-isValidValue : Int -> Bool
-isValidValue v =
-    v
-        == 0
-        || v
-        == 2
-        || v
-        == 4
-        || v
-        == 8
-        || v
-        == 16
-        || v
-        == 32
-        || v
-        == 64
-        || v
-        == 128
-        || v
-        == 256
-        || v
-        == 512
-        || v
-        == 1024
-        || v
-        == 2048
 
 
 boardFromString : String -> Maybe (List Cell)
@@ -568,11 +598,16 @@ type Msg
     | RandomCell Int
     | LinkClicked Browser.UrlRequest
     | UrlChanged Url.Url
+    | OnKeyPressed (Maybe Direction)
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NoOp ->
+            ( model, Cmd.none )
+
         NewGame ->
             let
                 newBoard =
@@ -610,6 +645,14 @@ update msg model =
             ( { model | url = url }
             , Cmd.none
             )
+
+        OnKeyPressed maybeDirection ->
+            case maybeDirection of
+                Just direction ->
+                    updateWithMove model direction
+
+                Nothing ->
+                    ( model, Cmd.none )
 
 
 findRandomEmptyCellCmd : List Cell -> Cmd Msg
@@ -700,7 +743,7 @@ viewControls boardState =
 
 viewBoard : List Cell -> Html Msg
 viewBoard board =
-    div [ class "board" ]
+    div [ class "board", id "board" ]
         [ viewBoardRow 0 board
         , viewBoardRow 1 board
         , viewBoardRow 2 board
@@ -730,7 +773,7 @@ viewCell cell =
                 "boardCell " ++ "boardCell--empty"
 
             else
-                "boardCell " ++ "boardCell--value"
+                "boardCell " ++ "boardCell--value " ++ "color" ++ String.fromInt cell.value
     in
     div
         [ class cellClass ]

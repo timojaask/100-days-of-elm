@@ -51,3 +51,4 @@ Progress and learning notes for each day:
 * [Day 48: 2048, URL parsing, installing elm locally from NPM](./day-48.md)
 * [Day 49: 2048, Cypress integration tests](./day-49.md)
 * [Day 50: 2048, Cypress integration tests finished, refactoring](./day-50.md)
+* [Day 51: 2048, Keyboard events, refactoring, colors](./day-51.md)

@@ -426,3 +426,45 @@ describe('losing a game', () => {
     expectLostState()
   })
 })
+
+describe('keyboard', () => {
+
+  it('should trigger left move when Left Arrow is pressed', () => {
+    visitBoardConfig(b('0_0_0_0', '0_0_8_0', '0_0_0_0', '0_0_0_0'))
+    cy.get('body').type('{leftarrow}')
+    cy.get('.boardCell').eq(4).should('contain', '8')
+    cy.get('.boardCell--value').should('have.length', 2)
+  })
+
+  it('should trigger right move when Right Arrow is pressed', () => {
+    visitBoardConfig(b('0_0_0_0', '0_8_0_0', '0_0_0_0', '0_0_0_0'))
+    cy.get('body').type('{rightarrow}')
+    cy.get('.boardCell').eq(7).should('contain', '8')
+    cy.get('.boardCell--value').should('have.length', 2)
+  })
+
+  it('should trigger up move when Up Arrow is pressed', () => {
+    visitBoardConfig(b('0_0_0_0', '0_0_0_0', '0_8_0_0', '0_0_0_0'))
+    cy.get('body').type('{uparrow}')
+    cy.get('.boardCell').eq(1).should('contain', '8')
+    cy.get('.boardCell--value').should('have.length', 2)
+  })
+
+  it('should trigger down move when Down Arrow is pressed', () => {
+    visitBoardConfig(b('0_0_0_0', '0_8_0_0', '0_0_0_0', '0_0_0_0'))
+    cy.get('body').type('{downarrow}')
+    cy.get('.boardCell').eq(13).should('contain', '8')
+    cy.get('.boardCell--value').should('have.length', 2)
+  })
+
+  // Emitting type events on <body> doesn't test the problem that the body
+  // doesn't have focus when the page is loaded. The app must set
+  // focus to body or any of its children first, before it can receive
+  // keyboard events. The reason why the tests above will fail to catch this
+  // is because they are already emitted on <body>.
+  // What we can test is that <body> gets focus after the app is loaded.
+  it.only('body should have focus after the game is loaded', () => {
+    cy.visit('/')
+    cy.focused().should('have.length', 1)
+  })
+})
